@@ -73,3 +73,69 @@ body.shake{
   border-color:#f7c948;
   box-shadow:0 0 26px rgba(247,201,72,.22);
 }
+
+
+/* ADMIN β1.3 Effects Restore */
+.effect-stage{
+  position:fixed;
+  inset:0;
+  z-index:10000;
+  pointer-events:none;
+  display:grid;
+  place-items:center;
+  background:radial-gradient(circle at center,rgba(0,0,0,.18),rgba(0,0,0,.72));
+  animation: stageFade 1.15s ease forwards;
+}
+.effect-stage.hidden{display:none}
+.effect-stage > div{
+  text-align:center;
+}
+.effect-icon{
+  font-size:92px;
+  filter:drop-shadow(0 0 22px rgba(247,201,72,.75));
+  animation: iconPop .62s cubic-bezier(.2,1.4,.2,1);
+}
+.effect-title{
+  margin-top:10px;
+  font-size:56px;
+  line-height:1;
+  font-weight:1000;
+  color:#f7c948;
+  letter-spacing:.05em;
+  text-shadow:0 0 22px rgba(247,201,72,.55),0 5px 0 rgba(0,0,0,.5);
+  animation: titleSlide .72s cubic-bezier(.2,1.2,.2,1);
+}
+.effect-sub{
+  margin-top:12px;
+  font-size:19px;
+  color:#fff;
+  font-weight:900;
+  text-shadow:0 2px 10px rgba(0,0,0,.8);
+  animation: titleSlide .82s cubic-bezier(.2,1.2,.2,1);
+}
+.effect-stage.boss .effect-title{color:#ff6b6b;text-shadow:0 0 24px rgba(255,107,107,.65)}
+.effect-stage.safe .effect-title{color:#77ead7;text-shadow:0 0 24px rgba(119,234,215,.65)}
+.effect-stage.live .effect-title{color:#7dd3fc;text-shadow:0 0 24px rgba(125,211,252,.65)}
+.effect-stage.final .effect-title{color:#ff9f1c;text-shadow:0 0 24px rgba(255,159,28,.65)}
+.effect-stage.alert .effect-title,.effect-stage.mission .effect-title{color:#f7c948}
+@keyframes stageFade{
+  0%{opacity:0}
+  10%{opacity:1}
+  72%{opacity:1}
+  100%{opacity:0}
+}
+@keyframes iconPop{
+  0%{transform:scale(.2) rotate(-12deg);opacity:0}
+  55%{transform:scale(1.18) rotate(4deg);opacity:1}
+  100%{transform:scale(1) rotate(0)}
+}
+@keyframes titleSlide{
+  0%{transform:translateY(22px);opacity:0}
+  100%{transform:translateY(0);opacity:1}
+}
+body.bossPulse{animation: bossPulse .9s ease}
+@keyframes bossPulse{
+  0%,100%{filter:none}
+  35%{filter:contrast(1.25) brightness(1.15)}
+  60%{filter:contrast(1.1) brightness(.9)}
+}

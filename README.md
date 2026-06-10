@@ -1,16 +1,16 @@
-# STREET SURVIVAL ADMIN β1.2 Feedback HUD
+# STREET SURVIVAL ADMIN β1.3 Effects Restore HUD
 
-運営画面の「押した感」を復活させた版です。
+β1.2で戻した「押した感」に加えて、前のような大きいアイコン演出とイベント別サウンドを復活させた版です。
 
-## β1.2 追加内容
+## β1.3 追加内容
 
-- ボタンを押すと光る
-- SEND表示が一瞬出る
-- 送信成功トースト表示
-- 画面が少し揺れる
-- 音が鳴る
-- スマホならバイブにも対応
-- Firebase送信はβ1.1と同じ
+- 中央にデカいイベントアイコン表示
+- BOSS / SAFE / LIVE / FINAL などイベント別の演出
+- イベント別サウンド
+- BOSS / FINAL は画面が強めに反応
+- 送信成功トースト
+- ボタンSEND表示
+- Firebase送信はβ1.2のまま維持
 
 ## 入っているファイル
 
@@ -21,14 +21,6 @@
 - firebase-config.js
 - README.md
 
-## アップロード方法
+## 注意
 
-GitHubの `street-survival-admin` に、このZIPを解凍した中身を全部アップロードして上書き。
-
-## 確認
-
-1. 管理画面を開く
-2. 右上に `🔥 Firebase: 接続中`
-3. BOSSを押す
-4. ボタンが光って音が鳴る
-5. Firebaseの currentCommand が BOSS になる
+Safariが古いJSを読んでいる場合は、URL末尾に `?v=13` を付けてください。
