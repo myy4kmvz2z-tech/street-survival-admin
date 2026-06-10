@@ -1,29 +1,28 @@
-# STREET SURVIVAL ADMIN ONLY β1.0
+# STREET SURVIVAL ADMIN β1.1 Firebase Complete
 
-## 内容
+運営画面専用の完成版です。
 
-運営専用アプリだけを別で作った版です。
-
-## ファイル
+## 入っているファイル
 
 - index.html
+- admin.html
 - admin.css
 - admin.js
+- firebase-config.js
 - README.md
 
-## 使い方
+## GitHub Pages
 
-GitHub Pagesにこのフォルダだけアップすれば、
-運営専用ページとして開けます。
+`street-survival-admin` にアップロードすると、
 
-例：
+https://myy4kmvz2z-tech.github.io/street-survival-admin/
 
-- 参加者用サイト：別リポジトリ
-- 運営用サイト：このADMIN ONLY版
+で開けます。
 
-## 注意
+## 機能
 
-この版はデモ用です。
-同じブラウザ内の参加者画面には localStorage 経由で反映できます。
-
-参加者全員へ一斉配信するには Firebase 等のサーバー連携が必要です。
+- Firebase Realtime Database 接続
+- NORMAL / ALERT / BOSS / MISSION / LIVE / SAFE / FINAL / END 送信
+- RADIO自由入力送信
+- プリセットRADIO
+- 運営ログ
