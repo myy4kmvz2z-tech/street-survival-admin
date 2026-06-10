@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>STREET SURVIVAL ADMIN</title>
+  <link rel="stylesheet" href="admin.css"/>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>STREET SURVIVAL</h1>
+    <p>ADMIN / GAME MASTER</p>
+  </div>
+  <span id="modeBadge">NORMAL</span>
+</header>
+
+<main class="app">
+  <section class="hero">
+    <div class="icon">🎛</div>
+    <h2>街を動かす</h2>
+    <p>運営専用。参加者には見せない画面。</p>
+  </section>
+
+  <section class="panel">
+    <h2>📻 イベント発令</h2>
+    <div class="grid">
+      <button id="normalBtn" class="normal">🌆<b>NORMAL</b><span>通常</span></button>
+      <button id="alertBtn" class="alert">⚠<b>ALERT</b><span>警戒</span></button>
+      <button id="bossBtn" class="boss">👹<b>BOSS</b><span>新町出現</span></button>
+      <button id="missionBtn" class="mission">🎯<b>MISSION</b><span>本町集合</span></button>
+      <button id="liveBtn" class="live">🎵<b>LIVE</b><span>オルタ開始</span></button>
+      <button id="safeBtn" class="safe">🛡<b>SAFE</b><span>Onn安全</span></button>
+      <button id="finalBtn" class="final">🔥<b>FINAL</b><span>終盤戦</span></button>
+      <button id="endBtn" class="end">🏆<b>END</b><span>終了</span></button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>📡 RADIO送信</h2>
+    <input id="radioInput" value="本町で戦闘発生！"/>
+    <button id="radioBtn" class="send">📻 速報を送信</button>
+  </section>
+
+  <section class="panel">
+    <h2>🌆 街ステータス</h2>
+    <div class="status">
+      <div><span>👥</span><b id="total">18</b><small>参加者</small></div>
+      <div><span>🟢</span><b id="hunter">5</b><small>HUNTER</small></div>
+      <div><span>🔵</span><b id="runner">13</b><small>RUNNER</small></div>
+      <div><span>👹</span><b id="boss">0</b><small>BOSS</small></div>
+      <div><span>🎯</span><b id="mission">0</b><small>MISSION</small></div>
+      <div><span>🛡</span><b id="safe">4</b><small>SAFE</small></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>🔊 サウンドテスト</h2>
+    <div class="sound-grid">
+      <button data-sound="safe">🛡 SAFE</button>
+      <button data-sound="boss">👹 BOSS</button>
+      <button data-sound="mission">🎯 MISSION</button>
+      <button data-sound="live">🎵 LIVE</button>
+      <button data-sound="final">🔥 FINAL</button>
+      <button data-sound="end">🏆 END</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>ログ</h2>
+    <div id="log" class="log"></div>
+  </section>
+
+  <p class="note">
+    β版：同じブラウザ内の参加者画面へは localStorage で反映できます。<br>
+    本番で全員へ一斉配信するには Firebase 等のリアルタイム同期が必要です。
+  </p>
+</main>
+
+<div id="overlay" class="overlay hidden">
+  <div id="overlayIcon">👹</div>
+  <strong id="overlayText">BOSS</strong>
+</div>
+
+<script src="admin.js"></script>
+</body>
+</html>
