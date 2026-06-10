@@ -3,19 +3,22 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>STREET SURVIVAL ADMIN β1.1</title>
+  <title>STREET SURVIVAL ADMIN β1.2</title>
   <link rel="stylesheet" href="admin.css">
 </head>
 <body>
   <header class="top">
     <div>
-      <h1>STREET SURVIVAL ADMIN β1.1</h1>
-      <p>GAME MASTER / Firebase Realtime Console</p>
+      <h1>STREET SURVIVAL ADMIN β1.2</h1>
+      <p>GAME MASTER / Firebase Realtime Console / Feedback HUD</p>
     </div>
     <div id="firebaseStatus" class="status status-wait">🔥 Firebase: 確認中</div>
   </header>
 
-  <main class="wrap">
+  <div id="toast" class="toast hidden">送信成功</div>
+<div id="flash" class="flash hidden"></div>
+
+<main class="wrap">
     <section class="hero">
       <div class="icon">🎛️</div>
       <h2>街を動かす</h2>

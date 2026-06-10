@@ -1,1 +1,75 @@
 *{box-sizing:border-box}body{margin:0;background:#080b0f;color:#f5f1e8;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif}.top{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,#11161d,#090b0f);padding:22px 18px;border-bottom:1px solid #27313d;display:flex;justify-content:space-between;gap:14px;align-items:center}.top h1{margin:0;font-size:28px;letter-spacing:.03em}.top p{margin:6px 0 0;color:#aeb7c2}.status{padding:10px 14px;border-radius:999px;font-size:13px;font-weight:900;background:#151b22;border:1px solid #2b3643;white-space:nowrap}.status-ok{background:#59d68d;color:#071009}.status-wait{background:#f7c948;color:#111}.status-error{background:#ff6b6b;color:#111}.wrap{max-width:760px;margin:0 auto;padding:18px}.hero{border:3px solid #f7c948;border-radius:26px;text-align:center;padding:26px 18px;background:radial-gradient(circle at top,#14202e,#0b1016);box-shadow:0 0 38px rgba(247,201,72,.25)}.hero .icon{font-size:52px}.hero h2{font-size:30px;margin:8px 0}.hero p{color:#b8c0ca;margin:0}.panel{background:#121820;border:1px solid #2a3440;border-radius:22px;margin-top:18px;padding:16px}.panel h3{font-size:22px;margin:0 0 12px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.grid button,.send,.preset button{border:0;border-radius:16px;padding:16px 10px;font-weight:1000;font-size:20px;cursor:pointer}.grid button b{display:block}.grid button small{display:block;font-size:12px;margin-top:4px}.normal,.end{background:#f1f5f9;color:#111}.alert,.mission{background:#f7c948;color:#111}.boss,.final{background:#ff6b6b;color:#111}.live,.safe{background:#77ead7;color:#111}.send{width:100%;background:#f7c948;color:#111;margin-top:10px}input{width:100%;padding:16px;border-radius:14px;border:1px solid #303b48;background:#05070a;color:#fff;font-size:18px}.preset{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}.preset button{background:#7dd3fc;color:#071018;font-size:15px}.stats{display:grid;gap:8px}.stats div{display:flex;justify-content:space-between;border-bottom:1px solid #2d3845;padding:10px 0;font-size:22px}.stats b{color:#f7c948}pre{white-space:pre-wrap;min-height:120px;background:#05070a;border:1px solid #2d3845;border-radius:14px;padding:12px;color:#d5dce5}@media(max-width:560px){.top{align-items:flex-start;flex-direction:column}.top h1{font-size:22px}.grid{grid-template-columns:1fr 1fr}.grid button{font-size:16px;padding:14px 8px}.wrap{padding:12px}}
+
+/* ADMIN β1.2 Feedback HUD */
+body.shake{
+  animation: adminShake .28s ease;
+}
+@keyframes adminShake{
+  0%{transform:translateX(0)}
+  25%{transform:translateX(-5px)}
+  50%{transform:translateX(5px)}
+  75%{transform:translateX(-3px)}
+  100%{transform:translateX(0)}
+}
+.grid button, .send, .preset button{
+  transition: transform .08s ease, filter .12s ease, box-shadow .12s ease;
+  position:relative;
+  overflow:hidden;
+}
+.grid button:active, .send:active, .preset button:active{
+  transform:scale(.96);
+}
+.grid button.sent, .send.sent, .preset button.sent{
+  filter:brightness(1.25);
+  box-shadow:0 0 0 4px rgba(255,255,255,.18),0 0 30px rgba(247,201,72,.45);
+}
+.grid button.sent::after, .send.sent::after, .preset button.sent::after{
+  content:"SEND";
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  color:#111;
+  background:rgba(255,255,255,.72);
+  font-size:22px;
+  font-weight:1000;
+  letter-spacing:.08em;
+}
+.toast{
+  position:fixed;
+  left:50%;
+  top:84px;
+  transform:translateX(-50%);
+  z-index:9999;
+  background:#59d68d;
+  color:#061006;
+  border:2px solid rgba(255,255,255,.45);
+  border-radius:999px;
+  padding:14px 22px;
+  font-size:18px;
+  font-weight:1000;
+  box-shadow:0 18px 40px rgba(0,0,0,.45),0 0 30px rgba(89,214,141,.35);
+  animation: toastPop .22s ease;
+}
+.toast.hidden{display:none}
+@keyframes toastPop{
+  from{opacity:0;transform:translateX(-50%) translateY(-12px) scale(.92)}
+  to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}
+}
+.flash{
+  position:fixed;
+  inset:0;
+  z-index:9998;
+  pointer-events:none;
+  background:radial-gradient(circle at center,rgba(247,201,72,.30),rgba(247,201,72,0) 60%);
+  animation: flashOut .45s ease forwards;
+}
+.flash.hidden{display:none}
+@keyframes flashOut{
+  from{opacity:1}
+  to{opacity:0}
+}
+.panel.last-send{
+  border-color:#f7c948;
+  box-shadow:0 0 26px rgba(247,201,72,.22);
+}
