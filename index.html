@@ -72,7 +72,191 @@
     </section>
   </main>
 
-  <script src="firebase-config.js"></script>
-  <script src="admin.js"></script>
+    <script src="firebase-config.js?v=39"></script>
+  <script src="admin.js?v=39"></script>
+
+  <!-- =====================================================
+    STREET SURVIVAL ADMIN CONTROL v39
+    全体操作パネル
+  ===================================================== -->
+
+  <section class="admin-v39-panel" style="margin:16px;padding:14px;border:1px solid #444;border-radius:12px;background:#111;color:#fff;">
+    <h2 style="margin-top:0;">🛠 ADMIN CONTROL v39</h2>
+
+    <div style="display:grid;gap:10px;">
+      <button id="adminHealAllBtn" style="padding:12px;font-size:16px;">❤️ 全員HP回復</button>
+      <button id="adminAllRunnerBtn" style="padding:12px;font-size:16px;">🔵 全員RUNNERに戻す</button>
+      <button id="adminResetAllBtn" style="padding:12px;font-size:16px;">🔄 全員リセット</button>
+      <button id="adminCleanupPlayersBtn" style="padding:12px;font-size:16px;">🧹 古い参加者削除</button>
+    </div>
+
+    <p id="adminV39Status" style="font-size:13px;color:#aaa;margin-bottom:0;">v39: 待機中</p>
+  </section>
+
+  <script>
+  function adminV39Status(text) {
+    const el = document.getElementById("adminV39Status");
+    if (el) el.textContent = text;
+    console.log("ADMIN v39:", text);
+  }
+
+  function adminV39CommandId(type) {
+    return type + "_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+  }
+
+  async function adminV39SendCommand(type, message) {
+    try {
+      if (!window.firebase) {
+        adminV39Status("Firebase未読込");
+        alert("Firebaseが読み込まれていません");
+        return;
+      }
+
+      if (!firebase.apps || !firebase.apps.length) {
+        if (!window.STREET_SURVIVAL_FIREBASE_CONFIG) {
+          adminV39Status("Firebase configなし");
+          alert("Firebase設定がありません");
+          return;
+        }
+        firebase.initializeApp(window.STREET_SURVIVAL_FIREBASE_CONFIG);
+      }
+
+      const db = firebase.database();
+
+      const cmd = {
+        id: adminV39CommandId(type),
+        type: type,
+        message: message || "",
+        at: new Date().toISOString(),
+        from: "admin-v39"
+      };
+
+      await db.ref("streetSurvival/currentCommand").set(cmd);
+      adminV39Status("送信OK: " + type);
+    } catch (e) {
+      console.error(e);
+      adminV39Status("送信エラー: " + e.message);
+      alert("送信エラー: " + e.message);
+    }
+  }
+
+  async function adminV39HealAll() {
+    try {
+      const db = firebase.database();
+      const snap = await db.ref("streetSurvival/players").get();
+      const players = snap.val() || {};
+      const updates = {};
+
+      Object.values(players).forEach(p => {
+        if (!p || !p.id) return;
+        updates[p.id + "/hp"] = 300;
+        updates[p.id + "/lastAdminAction"] = "HEAL_ALL";
+        updates[p.id + "/lastSeen"] = Date.now();
+      });
+
+      await db.ref("streetSurvival/players").update(updates);
+      await adminV39SendCommand("ADMIN_HEAL_ALL", "❤️ 全員HP回復");
+      adminV39Status("全員HP回復OK");
+    } catch (e) {
+      console.error(e);
+      adminV39Status("HP回復エラー: " + e.message);
+    }
+  }
+
+  async function adminV39AllRunner() {
+    try {
+      const db = firebase.database();
+      const snap = await db.ref("streetSurvival/players").get();
+      const players = snap.val() || {};
+      const updates = {};
+
+      Object.values(players).forEach(p => {
+        if (!p || !p.id) return;
+        updates[p.id + "/role"] = "runner";
+        updates[p.id + "/hunterEndsAt"] = null;
+        updates[p.id + "/invincibleUntil"] = Date.now() + 5000;
+        updates[p.id + "/lastAdminAction"] = "ALL_RUNNER";
+        updates[p.id + "/lastSeen"] = Date.now();
+      });
+
+      await db.ref("streetSurvival/players").update(updates);
+      await adminV39SendCommand("ADMIN_ALL_RUNNER", "🔵 全員RUNNERに戻しました");
+      adminV39Status("全員RUNNER OK");
+    } catch (e) {
+      console.error(e);
+      adminV39Status("全員RUNNERエラー: " + e.message);
+    }
+  }
+
+  async function adminV39ResetAll() {
+    try {
+      const db = firebase.database();
+      const snap = await db.ref("streetSurvival/players").get();
+      const players = snap.val() || {};
+      const updates = {};
+
+      Object.values(players).forEach(p => {
+        if (!p || !p.id) return;
+        updates[p.id + "/hp"] = 100;
+        updates[p.id + "/points"] = 0;
+        updates[p.id + "/role"] = "runner";
+        updates[p.id + "/hunterEndsAt"] = null;
+        updates[p.id + "/invincibleUntil"] = Date.now() + 5000;
+        updates[p.id + "/lastAdminAction"] = "RESET_ALL";
+        updates[p.id + "/lastSeen"] = Date.now();
+      });
+
+      await db.ref("streetSurvival/players").update(updates);
+      await adminV39SendCommand("ADMIN_RESET_ALL", "🔄 全員リセット");
+      adminV39Status("全員リセットOK");
+    } catch (e) {
+      console.error(e);
+      adminV39Status("全員リセットエラー: " + e.message);
+    }
+  }
+
+  async function adminV39CleanupPlayers() {
+    try {
+      const db = firebase.database();
+      const snap = await db.ref("streetSurvival/players").get();
+      const players = snap.val() || {};
+      const updates = {};
+      const now = Date.now();
+      let count = 0;
+
+      Object.values(players).forEach(p => {
+        if (!p || !p.id) return;
+        const lastSeen = Number(p.lastSeen || 0);
+
+        if (!lastSeen || now - lastSeen > 1000 * 60 * 3) {
+          updates[p.id] = null;
+          count++;
+        }
+      });
+
+      await db.ref("streetSurvival/players").update(updates);
+      await adminV39SendCommand("ADMIN_CLEANUP_PLAYERS", "🧹 古い参加者削除: " + count + "件");
+      adminV39Status("古い参加者削除OK: " + count + "件");
+    } catch (e) {
+      console.error(e);
+      adminV39Status("削除エラー: " + e.message);
+    }
+  }
+
+  window.addEventListener("load", () => {
+    const healBtn = document.getElementById("adminHealAllBtn");
+    const runnerBtn = document.getElementById("adminAllRunnerBtn");
+    const resetBtn = document.getElementById("adminResetAllBtn");
+    const cleanupBtn = document.getElementById("adminCleanupPlayersBtn");
+
+    if (healBtn) healBtn.addEventListener("click", adminV39HealAll);
+    if (runnerBtn) runnerBtn.addEventListener("click", adminV39AllRunner);
+    if (resetBtn) resetBtn.addEventListener("click", adminV39ResetAll);
+    if (cleanupBtn) cleanupBtn.addEventListener("click", adminV39CleanupPlayers);
+
+    adminV39Status("v39 起動OK");
+  });
+  </script>
 </body>
 </html>
+
