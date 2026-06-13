@@ -110,14 +110,16 @@ function updatePlayerStats(players){
   const list = players || {};
   const values = Object.values(list);
 
-  const onlinePlayers = values.filter(p => p.status === "ONLINE");
+  // まずは全登録を参加者として数える
+  // status判定がズレても人数が見えるようにする
+  const activePlayers = values;
 
-  const total = onlinePlayers.length;
-  const hunters = onlinePlayers.filter(p => p.role === "HUNTER").length;
-  const runners = onlinePlayers.filter(p => p.role === "RUNNER").length;
-  const bosses = onlinePlayers.filter(p => p.role === "BOSS").length;
-  const missions = onlinePlayers.filter(p => p.mission === true || p.status === "MISSION").length;
-  const safes = onlinePlayers.filter(p => p.area === "SAFE" || p.status === "SAFE").length;
+  const total = activePlayers.length;
+  const hunters = activePlayers.filter(p => p.role === "HUNTER").length;
+  const runners = activePlayers.filter(p => !p.role || p.role === "RUNNER").length;
+  const bosses = activePlayers.filter(p => p.role === "BOSS").length;
+  const missions = activePlayers.filter(p => p.mission === true || p.status === "MISSION").length;
+  const safes = activePlayers.filter(p => p.area === "SAFE" || p.status === "SAFE").length;
 
   setText("playerCount", String(total));
   setText("hunterCount", String(hunters));
@@ -126,7 +128,7 @@ function updatePlayerStats(players){
   setText("missionCount", String(missions));
   setText("safeCount", String(safes));
 
-  log("参加者更新: " + total + "人");
+  log("参加者更新: " + total + "人 / RUNNER " + runners + " / HUNTER " + hunters);
 }
 
 function watchPlayers(){
