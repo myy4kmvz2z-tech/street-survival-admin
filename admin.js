@@ -14,6 +14,11 @@ function setStatus(text, cls){
   el.className = "status " + cls;
 }
 
+function setText(id, text){
+  const el = $(id);
+  if(el) el.textContent = text;
+}
+
 function showToast(msg){
   const el = $("toast");
   if(!el) return;
@@ -34,9 +39,16 @@ function showFlash(msg){
   }, 800);
 }
 
-function setText(id, text){
-  const el = $(id);
-  if(el) el.textContent = text;
+function loadScript(src){
+  return new Promise((resolve, reject) => {
+    if(document.querySelector(`script[src="${src}"]`)) return resolve();
+
+    const s = document.createElement("script");
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = () => reject(new Error("読み込み失敗: " + src));
+    document.head.appendChild(s);
+  });
 }
 
 function normalizeRole(role){
@@ -75,18 +87,6 @@ function watchPlayers(){
   log("参加者監視開始");
 }
 
-function loadScript(src){
-  return new Promise((resolve, reject) => {
-    if(document.querySelector(`script[src="${src}"]`)) return resolve();
-
-    const s = document.createElement("script");
-    s.src = src;
-    s.onload = resolve;
-    s.onerror = () => reject(new Error("読み込み失敗: " + src));
-    document.head.appendChild(s);
-  });
-}
-
 async function initFirebaseAdmin(){
   try{
     if(!window.STREET_SURVIVAL_FIREBASE_ENABLED){
@@ -112,10 +112,10 @@ async function initFirebaseAdmin(){
 
     firebaseDb = firebase.database();
 
-watchPlayers();
+    watchPlayers();
 
-setStatus("🔥 Firebase: 接続OK", "status-ok");
-log("Firebase ADMIN 接続OK");
+    setStatus("🔥 Firebase: 接続OK", "status-ok");
+    log("Firebase ADMIN 接続OK");
   }catch(e){
     console.error(e);
     firebaseDb = null;
