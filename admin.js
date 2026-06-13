@@ -399,6 +399,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if(resetBtn) resetBtn.addEventListener("click", adminResetAll);
   if(cleanupBtn) cleanupBtn.addEventListener("click", adminCleanupPlayers);
 
-  adminV39Status("v45 起動OK");
-  log("ADMIN画面 起動完了 v45");
+  adminV39Status("v46 起動OK");
+log("ADMIN画面 起動完了 v46");
 });
