@@ -94,7 +94,7 @@ function watchPlayers(){
     updatePlayerStats(players);
   });
 
-  log("参加者監視開始 v42");
+  log("参加者監視開始 v44");
 }
 
 async function initFirebaseAdmin(){
@@ -140,7 +140,7 @@ async function sendCommand(type, message){
     type: type,
     message: message || "",
     at: new Date().toISOString(),
-    from: "admin-v42"
+    from: "admin-v44"
   };
 
   localStorage.setItem("street_survival_admin_command", JSON.stringify(cmd));
@@ -195,10 +195,42 @@ async function adminHealAll(){
 }
 
 async function adminAllRunner(){
-  async function adminRandomHunters(){
   try{
     if(!firebaseDb){
       adminV39Status("Firebase未接続");
+      return;
+    }
+
+    const snap = await firebaseDb.ref("streetSurvival/players").get();
+    const players = snap.val() || {};
+    const updates = {};
+
+    Object.values(players).forEach(p => {
+      if(!p || !p.id) return;
+      updates[p.id + "/role"] = "RUNNER";
+      updates[p.id + "/hunterEndsAt"] = null;
+      updates[p.id + "/invincibleUntil"] = Date.now() + 5000;
+      updates[p.id + "/lastAdminAction"] = "ALL_RUNNER";
+      updates[p.id + "/lastSeen"] = Date.now();
+    });
+
+    await firebaseDb.ref("streetSurvival/players").update(updates);
+    await sendCommand("ADMIN_ALL_RUNNER", "🔵 全員RUNNERに戻しました");
+
+    adminV39Status("全員RUNNER OK");
+  }catch(e){
+    console.error(e);
+    adminV39Status("全員RUNNERエラー: " + e.message);
+  }
+}
+
+async function adminRandomHunters(){
+  try{
+    log("🎲 ランダムHUNTERボタン押しました");
+
+    if(!firebaseDb){
+      adminV39Status("Firebase未接続");
+      log("ランダムHUNTER失敗: Firebase未接続");
       return;
     }
 
@@ -240,34 +272,6 @@ async function adminAllRunner(){
     console.error(e);
     adminV39Status("ランダムHUNTERエラー: " + e.message);
     log("ランダムHUNTERエラー: " + e.message);
-  }
-}
-  try{
-    if(!firebaseDb){
-      adminV39Status("Firebase未接続");
-      return;
-    }
-
-    const snap = await firebaseDb.ref("streetSurvival/players").get();
-    const players = snap.val() || {};
-    const updates = {};
-
-    Object.values(players).forEach(p => {
-      if(!p || !p.id) return;
-      updates[p.id + "/role"] = "RUNNER";
-      updates[p.id + "/hunterEndsAt"] = null;
-      updates[p.id + "/invincibleUntil"] = Date.now() + 5000;
-      updates[p.id + "/lastAdminAction"] = "ALL_RUNNER";
-      updates[p.id + "/lastSeen"] = Date.now();
-    });
-
-    await firebaseDb.ref("streetSurvival/players").update(updates);
-    await sendCommand("ADMIN_ALL_RUNNER", "🔵 全員RUNNERに戻しました");
-
-    adminV39Status("全員RUNNER OK");
-  }catch(e){
-    console.error(e);
-    adminV39Status("全員RUNNERエラー: " + e.message);
   }
 }
 
@@ -365,17 +369,22 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   const healBtn = $("adminHealAllBtn");
-const runnerBtn = $("adminAllRunnerBtn");
-const randomHuntersBtn = $("adminRandomHuntersBtn");
-const resetBtn = $("adminResetAllBtn");
-const cleanupBtn = $("adminCleanupPlayersBtn");
+  const runnerBtn = $("adminAllRunnerBtn");
+  const randomHuntersBtn = $("adminRandomHuntersBtn");
+  const resetBtn = $("adminResetAllBtn");
+  const cleanupBtn = $("adminCleanupPlayersBtn");
 
-if(healBtn) healBtn.addEventListener("click", adminHealAll);
-if(runnerBtn) runnerBtn.addEventListener("click", adminAllRunner);
-if(randomHuntersBtn) randomHuntersBtn.addEventListener("click", adminRandomHunters);
-if(resetBtn) resetBtn.addEventListener("click", adminResetAll);
-if(cleanupBtn) cleanupBtn.addEventListener("click", adminCleanupPlayers);
+  if(healBtn) healBtn.addEventListener("click", adminHealAll);
+  if(runnerBtn) runnerBtn.addEventListener("click", adminAllRunner);
+  if(randomHuntersBtn){
+    randomHuntersBtn.addEventListener("click", adminRandomHunters);
+    log("🎲 ランダムHUNTERボタン接続OK");
+  }else{
+    log("⚠️ adminRandomHuntersBtn が見つかりません");
+  }
+  if(resetBtn) resetBtn.addEventListener("click", adminResetAll);
+  if(cleanupBtn) cleanupBtn.addEventListener("click", adminCleanupPlayers);
 
-  adminV39Status("v42 起動OK");
-  log("ADMIN画面 起動完了 v42");
+  adminV39Status("v44 起動OK");
+  log("ADMIN画面 起動完了 v44");
 });
