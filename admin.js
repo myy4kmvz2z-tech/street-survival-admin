@@ -34,6 +34,47 @@ function showFlash(msg){
   }, 800);
 }
 
+function setText(id, text){
+  const el = $(id);
+  if(el) el.textContent = text;
+}
+
+function normalizeRole(role){
+  return String(role || "RUNNER").toUpperCase();
+}
+
+function updatePlayerStats(players){
+  const list = players || {};
+  const values = Object.values(list);
+
+  const total = values.length;
+  const hunters = values.filter(p => normalizeRole(p.role) === "HUNTER").length;
+  const runners = values.filter(p => normalizeRole(p.role) === "RUNNER").length;
+  const bosses = values.filter(p => normalizeRole(p.role) === "BOSS").length;
+  const missions = values.filter(p => p.mission === true || String(p.status || "").toUpperCase() === "MISSION").length;
+  const safes = values.filter(p => String(p.area || "").toUpperCase() === "SAFE" || String(p.status || "").toUpperCase() === "SAFE").length;
+
+  setText("playerCount", String(total));
+  setText("hunterCount", String(hunters));
+  setText("runnerCount", String(runners));
+  setText("bossCount", String(bosses));
+  setText("missionCount", String(missions));
+  setText("safeCount", String(safes));
+
+  log("参加者更新: " + total + "人 / RUNNER " + runners + " / HUNTER " + hunters);
+}
+
+function watchPlayers(){
+  if(!firebaseDb) return;
+
+  firebaseDb.ref("streetSurvival/players").on("value", snap => {
+    const players = snap.val() || {};
+    updatePlayerStats(players);
+  });
+
+  log("参加者監視開始");
+}
+
 function loadScript(src){
   return new Promise((resolve, reject) => {
     if(document.querySelector(`script[src="${src}"]`)) return resolve();
@@ -71,8 +112,10 @@ async function initFirebaseAdmin(){
 
     firebaseDb = firebase.database();
 
-    setStatus("🔥 Firebase: 接続OK", "status-ok");
-    log("Firebase ADMIN 接続OK");
+watchPlayers();
+
+setStatus("🔥 Firebase: 接続OK", "status-ok");
+log("Firebase ADMIN 接続OK");
   }catch(e){
     console.error(e);
     firebaseDb = null;
