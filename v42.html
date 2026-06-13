@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>STREET SURVIVAL ADMIN β1.3 v42</title>
+  <link rel="stylesheet" href="admin.css?v=42">
+</head>
+
+<body>
+  <header class="top">
+    <div>
+      <h1>STREET SURVIVAL ADMIN β1.3 v42</h1>
+      <p>GAME MASTER / Firebase Realtime Console / Real Player Stats</p>
+    </div>
+    <div id="firebaseStatus" class="status status-wait">🔥 Firebase: 確認中</div>
+  </header>
+
+  <div id="toast" class="toast hidden">送信成功</div>
+  <div id="flash" class="flash hidden"></div>
+
+  <div id="effectStage" class="effect-stage hidden">
+    <div id="effectIcon" class="effect-icon">📡</div>
+    <div id="effectTitle" class="effect-title">SEND</div>
+    <div id="effectSub" class="effect-sub">Firebase送信</div>
+  </div>
+
+  <main class="wrap">
+
+    <section class="hero">
+      <div class="icon">🎛️</div>
+      <h2>街を動かす</h2>
+      <p>運営専用。参加者には見せない画面。</p>
+    </section>
+
+    <section class="panel">
+      <h3>🗂 イベント発令</h3>
+
+      <div class="grid">
+        <button class="normal" data-type="NORMAL" data-radio="通常モードです。">
+          🌆<b>NORMAL</b><small>通常</small>
+        </button>
+
+        <button class="alert" data-type="ALERT" data-radio="⚠️ 警戒モード発令！街に注意してください。">
+          ⚠️<b>ALERT</b><small>警戒</small>
+        </button>
+
+        <button class="boss" data-type="BOSS" data-radio="👹 新町にBOSS出現！討伐チャンス！">
+          👹<b>BOSS</b><small>新町出現</small>
+        </button>
+
+        <button class="mission" data-type="MISSION" data-radio="🎯 本町集合ミッション開始！">
+          🎯<b>MISSION</b><small>本町集合</small>
+        </button>
+
+        <button class="live" data-type="LIVE" data-radio="🎵 オルタネーターズLIVE開始！お宿 Onn前へ！">
+          🎵<b>LIVE</b><small>オルタ開始</small>
+        </button>
+
+        <button class="safe" data-type="SAFE" data-radio="🛡 お宿 Onn SAFE ZONE発動！HP回復できます！">
+          🛡<b>SAFE</b><small>Onn安全</small>
+        </button>
+
+        <button class="final" data-type="FINAL" data-radio="🔥 FINAL BATTLE開始！HP吸収2倍！POINT2倍！">
+          🔥<b>FINAL</b><small>終盤戦</small>
+        </button>
+
+        <button class="end" data-type="END" data-radio="🏆 GAME END！お宿 Onn前へ集合！">
+          🏆<b>END</b><small>終了</small>
+        </button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h3>📡 RADIO送信</h3>
+
+      <input id="radioInput" value="本町で戦闘発生！">
+      <button id="radioSend" class="send">📻 RADIOを送信</button>
+
+      <div class="preset">
+        <button data-radio="👹 新町にBOSS出現！">👹 ボス</button>
+        <button data-radio="🎯 本町集合ミッション開始！">🎯 ミッション</button>
+        <button data-radio="🎵 オルタネーターズLIVE開始！">🎵 LIVE</button>
+        <button data-radio="🛡 お宿 Onn SAFE ZONE発動！">🛡 SAFE</button>
+        <button data-radio="🔥 FINAL BATTLE開始！">🔥 FINAL</button>
+        <button data-radio="🏆 GAME END！集合してください！">🏆 END</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h3>🌆 街ステータス v42</h3>
+
+      <div class="stats">
+        <div><span>👥 参加者</span><b id="playerCount">0</b></div>
+        <div><span>🟢 HUNTER</span><b id="hunterCount">0</b></div>
+        <div><span>🔵 RUNNER</span><b id="runnerCount">0</b></div>
+        <div><span>👹 BOSS</span><b id="bossCount">0</b></div>
+        <div><span>🎯 MISSION</span><b id="missionCount">0</b></div>
+        <div><span>🛡 SAFE</span><b id="safeCount">0</b></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h3>📋 運営ログ</h3>
+      <pre id="log"></pre>
+    </section>
+
+    <section class="admin-v39-panel" style="margin:16px 0;padding:14px;border:1px solid #444;border-radius:12px;background:#111;color:#fff;">
+      <h2 style="margin-top:0;">🛠 ADMIN CONTROL v42</h2>
+
+      <div style="display:grid;gap:10px;">
+        <button id="adminHealAllBtn" style="padding:12px;font-size:16px;">❤️ 全員HP回復</button>
+        <button id="adminAllRunnerBtn" style="padding:12px;font-size:16px;">🔵 全員RUNNERに戻す</button>
+        <button id="adminResetAllBtn" style="padding:12px;font-size:16px;">🔄 全員リセット</button>
+        <button id="adminCleanupPlayersBtn" style="padding:12px;font-size:16px;">🧹 古い参加者削除</button>
+      </div>
+
+      <p id="adminV39Status" style="font-size:13px;color:#aaa;margin-bottom:0;">v42: 待機中</p>
+    </section>
+
+  </main>
+
+  <script src="firebase-config.js?v=42"></script>
+  <script src="admin.js?v=42"></script>
+</body>
+</html>
