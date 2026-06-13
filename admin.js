@@ -195,6 +195,53 @@ async function adminHealAll(){
 }
 
 async function adminAllRunner(){
+  async function adminRandomHunters(){
+  try{
+    if(!firebaseDb){
+      adminV39Status("Firebase未接続");
+      return;
+    }
+
+    const snap = await firebaseDb.ref("streetSurvival/players").get();
+    const players = snap.val() || {};
+    const list = Object.values(players).filter(p => p && p.id);
+
+    if(list.length === 0){
+      adminV39Status("参加者がいません");
+      log("ランダムHUNTER失敗: 参加者0人");
+      return;
+    }
+
+    const shuffled = list.sort(() => Math.random() - 0.5);
+    const hunterCount = Math.min(3, shuffled.length);
+    const hunters = shuffled.slice(0, hunterCount);
+    const hunterIds = new Set(hunters.map(p => p.id));
+
+    const updates = {};
+    const now = Date.now();
+
+    list.forEach(p => {
+      updates[p.id + "/role"] = hunterIds.has(p.id) ? "HUNTER" : "RUNNER";
+      updates[p.id + "/hunterEndsAt"] = hunterIds.has(p.id) ? now + 10 * 60 * 1000 : null;
+      updates[p.id + "/lastAdminAction"] = "RANDOM_HUNTERS";
+      updates[p.id + "/lastSeen"] = now;
+    });
+
+    await firebaseDb.ref("streetSurvival/players").update(updates);
+
+    await sendCommand(
+      "HUNTER",
+      "🎲 ランダムHUNTER発生！" + hunterCount + "人がHUNTERになりました！"
+    );
+
+    adminV39Status("ランダムHUNTER OK: " + hunterCount + "人");
+    log("ランダムHUNTER OK: " + hunterCount + "人");
+  }catch(e){
+    console.error(e);
+    adminV39Status("ランダムHUNTERエラー: " + e.message);
+    log("ランダムHUNTERエラー: " + e.message);
+  }
+}
   try{
     if(!firebaseDb){
       adminV39Status("Firebase未接続");
