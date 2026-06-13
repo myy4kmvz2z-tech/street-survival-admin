@@ -4,8 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>STREET SURVIVAL ADMIN β1.3 v42</title>
-  <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="admin.css?v=42">
 </head>
+
 <body>
   <header class="top">
     <div>
@@ -25,6 +26,7 @@
   </div>
 
   <main class="wrap">
+
     <section class="hero">
       <div class="icon">🎛️</div>
       <h2>街を動かす</h2>
@@ -33,20 +35,45 @@
 
     <section class="panel">
       <h3>🗂 イベント発令</h3>
+
       <div class="grid">
-        <button class="normal" data-type="NORMAL" data-radio="通常モードです。">🌆<b>NORMAL</b><small>通常</small></button>
-        <button class="alert" data-type="ALERT" data-radio="⚠️ 警戒モード発令！街に注意してください。">⚠️<b>ALERT</b><small>警戒</small></button>
-        <button class="boss" data-type="BOSS" data-radio="👹 新町にBOSS出現！討伐チャンス！">👹<b>BOSS</b><small>新町出現</small></button>
-        <button class="mission" data-type="MISSION" data-radio="🎯 本町集合ミッション開始！">🎯<b>MISSION</b><small>本町集合</small></button>
-        <button class="live" data-type="LIVE" data-radio="🎵 オルタネーターズLIVE開始！お宿 Onn前へ！">🎵<b>LIVE</b><small>オルタ開始</small></button>
-        <button class="safe" data-type="SAFE" data-radio="🛡 お宿 Onn SAFE ZONE発動！HP回復できます！">🛡<b>SAFE</b><small>Onn安全</small></button>
-        <button class="final" data-type="FINAL" data-radio="🔥 FINAL BATTLE開始！HP吸収2倍！POINT2倍！">🔥<b>FINAL</b><small>終盤戦</small></button>
-        <button class="end" data-type="END" data-radio="🏆 GAME END！お宿 Onn前へ集合！">🏆<b>END</b><small>終了</small></button>
+        <button class="normal" data-type="NORMAL" data-radio="通常モードです。">
+          🌆<b>NORMAL</b><small>通常</small>
+        </button>
+
+        <button class="alert" data-type="ALERT" data-radio="⚠️ 警戒モード発令！街に注意してください。">
+          ⚠️<b>ALERT</b><small>警戒</small>
+        </button>
+
+        <button class="boss" data-type="BOSS" data-radio="👹 新町にBOSS出現！討伐チャンス！">
+          👹<b>BOSS</b><small>新町出現</small>
+        </button>
+
+        <button class="mission" data-type="MISSION" data-radio="🎯 本町集合ミッション開始！">
+          🎯<b>MISSION</b><small>本町集合</small>
+        </button>
+
+        <button class="live" data-type="LIVE" data-radio="🎵 オルタネーターズLIVE開始！お宿 Onn前へ！">
+          🎵<b>LIVE</b><small>オルタ開始</small>
+        </button>
+
+        <button class="safe" data-type="SAFE" data-radio="🛡 お宿 Onn SAFE ZONE発動！HP回復できます！">
+          🛡<b>SAFE</b><small>Onn安全</small>
+        </button>
+
+        <button class="final" data-type="FINAL" data-radio="🔥 FINAL BATTLE開始！HP吸収2倍！POINT2倍！">
+          🔥<b>FINAL</b><small>終盤戦</small>
+        </button>
+
+        <button class="end" data-type="END" data-radio="🏆 GAME END！お宿 Onn前へ集合！">
+          🏆<b>END</b><small>終了</small>
+        </button>
       </div>
     </section>
 
     <section class="panel">
       <h3>📡 RADIO送信</h3>
+
       <input id="radioInput" value="本町で戦闘発生！">
       <button id="radioSend" class="send">📻 RADIOを送信</button>
 
@@ -62,6 +89,7 @@
 
     <section class="panel">
       <h3>🌆 街ステータス v42</h3>
+
       <div class="stats">
         <div><span>👥 参加者</span><b id="playerCount">0</b></div>
         <div><span>🟢 HUNTER</span><b id="hunterCount">0</b></div>
@@ -89,6 +117,7 @@
 
       <p id="adminV39Status" style="font-size:13px;color:#aaa;margin-bottom:0;">v42: 待機中</p>
     </section>
+
   </main>
 
   <script src="firebase-config.js?v=42"></script>
