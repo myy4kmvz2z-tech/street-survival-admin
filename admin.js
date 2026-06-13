@@ -236,33 +236,36 @@ async function adminRandomHunters(){
 
     const snap = await firebaseDb.ref("streetSurvival/players").get();
     const players = snap.val() || {};
-    const list = Object.values(players).filter(p => p && p.id);
 
-    if(list.length === 0){
+    // Firebaseのキーを使う。p.idに頼らない安全版。
+    const entries = Object.entries(players).filter(([key, p]) => p);
+
+    if(entries.length === 0){
       adminV39Status("参加者がいません");
       log("ランダムHUNTER失敗: 参加者0人");
       return;
     }
 
-    const shuffled = list.sort(() => Math.random() - 0.5);
+    const shuffled = entries.sort(() => Math.random() - 0.5);
     const hunterCount = Math.min(3, shuffled.length);
-    const hunters = shuffled.slice(0, hunterCount);
-    const hunterIds = new Set(hunters.map(p => p.id));
+    const hunterKeys = new Set(shuffled.slice(0, hunterCount).map(([key]) => key));
 
     const updates = {};
     const now = Date.now();
 
-    list.forEach(p => {
-      updates[p.id + "/role"] = hunterIds.has(p.id) ? "HUNTER" : "RUNNER";
-      updates[p.id + "/hunterEndsAt"] = hunterIds.has(p.id) ? now + 10 * 60 * 1000 : null;
-      updates[p.id + "/lastAdminAction"] = "RANDOM_HUNTERS";
-      updates[p.id + "/lastSeen"] = now;
+    entries.forEach(([key, p]) => {
+      const isHunter = hunterKeys.has(key);
+
+      updates[key + "/role"] = isHunter ? "HUNTER" : "RUNNER";
+      updates[key + "/hunterEndsAt"] = isHunter ? now + 10 * 60 * 1000 : null;
+      updates[key + "/lastAdminAction"] = "RANDOM_HUNTERS";
+      updates[key + "/lastSeen"] = now;
     });
 
     await firebaseDb.ref("streetSurvival/players").update(updates);
 
     await sendCommand(
-      "HUNTER",
+      "RADIO",
       "🎲 ランダムHUNTER発生！" + hunterCount + "人がHUNTERになりました！"
     );
 
@@ -274,117 +277,3 @@ async function adminRandomHunters(){
     log("ランダムHUNTERエラー: " + e.message);
   }
 }
-
-async function adminResetAll(){
-  try{
-    if(!firebaseDb){
-      adminV39Status("Firebase未接続");
-      return;
-    }
-
-    const snap = await firebaseDb.ref("streetSurvival/players").get();
-    const players = snap.val() || {};
-    const updates = {};
-
-    Object.values(players).forEach(p => {
-      if(!p || !p.id) return;
-      updates[p.id + "/hp"] = 100;
-      updates[p.id + "/points"] = 0;
-      updates[p.id + "/role"] = "RUNNER";
-      updates[p.id + "/hunterEndsAt"] = null;
-      updates[p.id + "/invincibleUntil"] = Date.now() + 5000;
-      updates[p.id + "/lastAdminAction"] = "RESET_ALL";
-      updates[p.id + "/lastSeen"] = Date.now();
-    });
-
-    await firebaseDb.ref("streetSurvival/players").update(updates);
-    await sendCommand("ADMIN_RESET_ALL", "🔄 全員リセット");
-
-    adminV39Status("全員リセットOK");
-  }catch(e){
-    console.error(e);
-    adminV39Status("全員リセットエラー: " + e.message);
-  }
-}
-
-async function adminCleanupPlayers(){
-  try{
-    if(!firebaseDb){
-      adminV39Status("Firebase未接続");
-      return;
-    }
-
-    const snap = await firebaseDb.ref("streetSurvival/players").get();
-    const players = snap.val() || {};
-    const updates = {};
-    const now = Date.now();
-    let count = 0;
-
-    Object.values(players).forEach(p => {
-      if(!p || !p.id) return;
-
-      const lastSeen = Number(p.lastSeen || 0);
-
-      if(!lastSeen || now - lastSeen > 1000 * 60 * 3){
-        updates[p.id] = null;
-        count++;
-      }
-    });
-
-    await firebaseDb.ref("streetSurvival/players").update(updates);
-    await sendCommand("ADMIN_CLEANUP_PLAYERS", "🧹 古い参加者削除: " + count + "件");
-
-    adminV39Status("古い参加者削除OK: " + count + "件");
-  }catch(e){
-    console.error(e);
-    adminV39Status("削除エラー: " + e.message);
-  }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  initFirebaseAdmin();
-
-  document.querySelectorAll("[data-type]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const type = btn.dataset.type;
-      const message = btn.dataset.radio || type;
-      sendCommand(type, message);
-    });
-  });
-
-  const radioSend = $("radioSend");
-  if(radioSend){
-    radioSend.addEventListener("click", () => {
-      const input = $("radioInput");
-      sendCommand("RADIO", input?.value || "運営速報");
-    });
-  }
-
-  document.querySelectorAll("[data-radio]:not([data-type])").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const input = $("radioInput");
-      if(input) input.value = btn.dataset.radio;
-      sendCommand("RADIO", btn.dataset.radio);
-    });
-  });
-
-  const healBtn = $("adminHealAllBtn");
-  const runnerBtn = $("adminAllRunnerBtn");
-  const randomHuntersBtn = $("adminRandomHuntersBtn");
-  const resetBtn = $("adminResetAllBtn");
-  const cleanupBtn = $("adminCleanupPlayersBtn");
-
-  if(healBtn) healBtn.addEventListener("click", adminHealAll);
-  if(runnerBtn) runnerBtn.addEventListener("click", adminAllRunner);
-  if(randomHuntersBtn){
-    randomHuntersBtn.addEventListener("click", adminRandomHunters);
-    log("🎲 ランダムHUNTERボタン接続OK");
-  }else{
-    log("⚠️ adminRandomHuntersBtn が見つかりません");
-  }
-  if(resetBtn) resetBtn.addEventListener("click", adminResetAll);
-  if(cleanupBtn) cleanupBtn.addEventListener("click", adminCleanupPlayers);
-
-  adminV39Status("v44 起動OK");
-  log("ADMIN画面 起動完了 v44");
-});
