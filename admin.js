@@ -1,4 +1,5 @@
 let firebaseDb = null;
+
 const $ = id => document.getElementById(id);
 
 function log(msg){
@@ -39,6 +40,12 @@ function showFlash(msg){
   }, 800);
 }
 
+function adminV39Status(text){
+  const el = $("adminV39Status");
+  if(el) el.textContent = text;
+  console.log("ADMIN CONTROL:", text);
+}
+
 function loadScript(src){
   return new Promise((resolve, reject) => {
     if(document.querySelector(`script[src="${src}"]`)) return resolve();
@@ -77,14 +84,17 @@ function updatePlayerStats(players){
 }
 
 function watchPlayers(){
-  if(!firebaseDb) return;
+  if(!firebaseDb){
+    log("参加者監視失敗: firebaseDbなし");
+    return;
+  }
 
   firebaseDb.ref("streetSurvival/players").on("value", snap => {
     const players = snap.val() || {};
     updatePlayerStats(players);
   });
 
-  log("参加者監視開始");
+  log("参加者監視開始 v42");
 }
 
 async function initFirebaseAdmin(){
@@ -127,9 +137,10 @@ async function initFirebaseAdmin(){
 async function sendCommand(type, message){
   const cmd = {
     id: Date.now() + "_" + Math.random().toString(16).slice(2),
-    type,
+    type: type,
     message: message || "",
-    at: new Date().toISOString()
+    at: new Date().toISOString(),
+    from: "admin-v42"
   };
 
   localStorage.setItem("street_survival_admin_command", JSON.stringify(cmd));
@@ -152,6 +163,130 @@ async function sendCommand(type, message){
     log("送信エラー: " + e.message);
     showToast("送信エラー");
     setStatus("🔥 Firebase: 送信エラー", "status-error");
+  }
+}
+
+async function adminHealAll(){
+  try{
+    if(!firebaseDb){
+      adminV39Status("Firebase未接続");
+      return;
+    }
+
+    const snap = await firebaseDb.ref("streetSurvival/players").get();
+    const players = snap.val() || {};
+    const updates = {};
+
+    Object.values(players).forEach(p => {
+      if(!p || !p.id) return;
+      updates[p.id + "/hp"] = 300;
+      updates[p.id + "/lastAdminAction"] = "HEAL_ALL";
+      updates[p.id + "/lastSeen"] = Date.now();
+    });
+
+    await firebaseDb.ref("streetSurvival/players").update(updates);
+    await sendCommand("ADMIN_HEAL_ALL", "❤️ 全員HP回復");
+
+    adminV39Status("全員HP回復OK");
+  }catch(e){
+    console.error(e);
+    adminV39Status("HP回復エラー: " + e.message);
+  }
+}
+
+async function adminAllRunner(){
+  try{
+    if(!firebaseDb){
+      adminV39Status("Firebase未接続");
+      return;
+    }
+
+    const snap = await firebaseDb.ref("streetSurvival/players").get();
+    const players = snap.val() || {};
+    const updates = {};
+
+    Object.values(players).forEach(p => {
+      if(!p || !p.id) return;
+      updates[p.id + "/role"] = "RUNNER";
+      updates[p.id + "/hunterEndsAt"] = null;
+      updates[p.id + "/invincibleUntil"] = Date.now() + 5000;
+      updates[p.id + "/lastAdminAction"] = "ALL_RUNNER";
+      updates[p.id + "/lastSeen"] = Date.now();
+    });
+
+    await firebaseDb.ref("streetSurvival/players").update(updates);
+    await sendCommand("ADMIN_ALL_RUNNER", "🔵 全員RUNNERに戻しました");
+
+    adminV39Status("全員RUNNER OK");
+  }catch(e){
+    console.error(e);
+    adminV39Status("全員RUNNERエラー: " + e.message);
+  }
+}
+
+async function adminResetAll(){
+  try{
+    if(!firebaseDb){
+      adminV39Status("Firebase未接続");
+      return;
+    }
+
+    const snap = await firebaseDb.ref("streetSurvival/players").get();
+    const players = snap.val() || {};
+    const updates = {};
+
+    Object.values(players).forEach(p => {
+      if(!p || !p.id) return;
+      updates[p.id + "/hp"] = 100;
+      updates[p.id + "/points"] = 0;
+      updates[p.id + "/role"] = "RUNNER";
+      updates[p.id + "/hunterEndsAt"] = null;
+      updates[p.id + "/invincibleUntil"] = Date.now() + 5000;
+      updates[p.id + "/lastAdminAction"] = "RESET_ALL";
+      updates[p.id + "/lastSeen"] = Date.now();
+    });
+
+    await firebaseDb.ref("streetSurvival/players").update(updates);
+    await sendCommand("ADMIN_RESET_ALL", "🔄 全員リセット");
+
+    adminV39Status("全員リセットOK");
+  }catch(e){
+    console.error(e);
+    adminV39Status("全員リセットエラー: " + e.message);
+  }
+}
+
+async function adminCleanupPlayers(){
+  try{
+    if(!firebaseDb){
+      adminV39Status("Firebase未接続");
+      return;
+    }
+
+    const snap = await firebaseDb.ref("streetSurvival/players").get();
+    const players = snap.val() || {};
+    const updates = {};
+    const now = Date.now();
+    let count = 0;
+
+    Object.values(players).forEach(p => {
+      if(!p || !p.id) return;
+
+      const lastSeen = Number(p.lastSeen || 0);
+
+      if(!lastSeen || now - lastSeen > 1000 * 60 * 3){
+        updates[p.id] = null;
+        count++;
+      }
+    });
+
+    await firebaseDb.ref("streetSurvival/players").update(updates);
+    await sendCommand("ADMIN_CLEANUP_PLAYERS", "🧹 古い参加者削除: " + count + "件");
+
+    adminV39Status("古い参加者削除OK: " + count + "件");
+  }catch(e){
+    console.error(e);
+    adminV39Status("削除エラー: " + e.message);
   }
 }
 
@@ -182,5 +317,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  log("ADMIN画面 起動完了");
+  const healBtn = $("adminHealAllBtn");
+  const runnerBtn = $("adminAllRunnerBtn");
+  const resetBtn = $("adminResetAllBtn");
+  const cleanupBtn = $("adminCleanupPlayersBtn");
+
+  if(healBtn) healBtn.addEventListener("click", adminHealAll);
+  if(runnerBtn) runnerBtn.addEventListener("click", adminAllRunner);
+  if(resetBtn) resetBtn.addEventListener("click", adminResetAll);
+  if(cleanupBtn) cleanupBtn.addEventListener("click", adminCleanupPlayers);
+
+  adminV39Status("v42 起動OK");
+  log("ADMIN画面 起動完了 v42");
 });
