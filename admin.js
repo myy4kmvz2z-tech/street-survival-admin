@@ -365,14 +365,16 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   const healBtn = $("adminHealAllBtn");
-  const runnerBtn = $("adminAllRunnerBtn");
-  const resetBtn = $("adminResetAllBtn");
-  const cleanupBtn = $("adminCleanupPlayersBtn");
+const runnerBtn = $("adminAllRunnerBtn");
+const randomHuntersBtn = $("adminRandomHuntersBtn");
+const resetBtn = $("adminResetAllBtn");
+const cleanupBtn = $("adminCleanupPlayersBtn");
 
-  if(healBtn) healBtn.addEventListener("click", adminHealAll);
-  if(runnerBtn) runnerBtn.addEventListener("click", adminAllRunner);
-  if(resetBtn) resetBtn.addEventListener("click", adminResetAll);
-  if(cleanupBtn) cleanupBtn.addEventListener("click", adminCleanupPlayers);
+if(healBtn) healBtn.addEventListener("click", adminHealAll);
+if(runnerBtn) runnerBtn.addEventListener("click", adminAllRunner);
+if(randomHuntersBtn) randomHuntersBtn.addEventListener("click", adminRandomHunters);
+if(resetBtn) resetBtn.addEventListener("click", adminResetAll);
+if(cleanupBtn) cleanupBtn.addEventListener("click", adminCleanupPlayers);
 
   adminV39Status("v42 起動OK");
   log("ADMIN画面 起動完了 v42");
