@@ -86,6 +86,8 @@ async function initFirebaseAdmin(){
 
     firebaseDb = firebase.database();
 
+    watchPlayers();
+
     setFirebaseStatus("🔥 Firebase: 接続OK");
     log("ADMIN Firebase 接続OK");
   }catch(e){
@@ -104,6 +106,39 @@ function bindButton(id, type, message){
   });
 }
 
+function updatePlayerStats(players){
+  const list = players || {};
+  const values = Object.values(list);
+
+  const onlinePlayers = values.filter(p => p.status === "ONLINE");
+
+  const total = onlinePlayers.length;
+  const hunters = onlinePlayers.filter(p => p.role === "HUNTER").length;
+  const runners = onlinePlayers.filter(p => p.role === "RUNNER").length;
+  const bosses = onlinePlayers.filter(p => p.role === "BOSS").length;
+  const missions = onlinePlayers.filter(p => p.mission === true || p.status === "MISSION").length;
+  const safes = onlinePlayers.filter(p => p.area === "SAFE" || p.status === "SAFE").length;
+
+  setText("playerCount", String(total));
+  setText("hunterCount", String(hunters));
+  setText("runnerCount", String(runners));
+  setText("bossCount", String(bosses));
+  setText("missionCount", String(missions));
+  setText("safeCount", String(safes));
+
+  log("参加者更新: " + total + "人");
+}
+
+function watchPlayers(){
+  if(!firebaseDb) return;
+
+  firebaseDb.ref("streetSurvival/players").on("value", snap => {
+    const players = snap.val() || {};
+    updatePlayerStats(players);
+  });
+
+  log("参加者監視開始");
+}
 function initAdminButtons(){
   bindButton("radioBtn", "RADIO", "📻 運営テスト：参加者画面への通知成功！");
   bindButton("alertBtn", "ALERT", "⚠️ 緊急速報！周囲に注意してください。");
