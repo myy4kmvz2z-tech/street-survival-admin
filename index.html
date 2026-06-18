@@ -129,40 +129,113 @@
 <script src="admin.js?v=49"></script>
 
 <script>
-/* TEST 30SEC HUNTER DIRECT v51 */
+/* STREET SURVIVAL ADMIN DIRECT FIREBASE FIX v52 */
+
+let adminDirectDb = null;
 
 function adminDirectLog(msg){
   const logEl = document.getElementById("log");
   const t = new Date().toLocaleTimeString();
+
   if(logEl){
     logEl.textContent = "[" + t + "] " + msg + "\n" + logEl.textContent;
   }
+
   console.log(msg);
 }
 
-function adminDirectGetDb(){
-  if(!window.firebase){
-    throw new Error("Firebase本体が未読込です");
-  }
+function adminDirectStatus(text, cls){
+  const el = document.getElementById("firebaseStatus");
+  if(!el) return;
 
-  if(!window.STREET_SURVIVAL_FIREBASE_CONFIG){
-    throw new Error("Firebase設定がありません");
-  }
+  el.textContent = text;
+  el.className = "status " + (cls || "status-wait");
+}
 
-  if(!firebase.apps.length){
-    firebase.initializeApp(window.STREET_SURVIVAL_FIREBASE_CONFIG);
-  }
+function adminDirectSetText(id, text){
+  const el = document.getElementById(id);
+  if(el) el.textContent = text;
+}
 
-  return firebase.database();
+function adminDirectNormalizeRole(role){
+  return String(role || "RUNNER").toUpperCase();
+}
+
+function adminDirectUpdateStats(players){
+  const list = players || {};
+  const values = Object.values(list);
+
+  const total = values.length;
+  const hunters = values.filter(p => adminDirectNormalizeRole(p.role) === "HUNTER").length;
+  const runners = values.filter(p => adminDirectNormalizeRole(p.role) === "RUNNER").length;
+  const bosses = values.filter(p => adminDirectNormalizeRole(p.role) === "BOSS").length;
+  const missions = values.filter(p => p.mission === true || String(p.status || "").toUpperCase() === "MISSION").length;
+  const safes = values.filter(p => String(p.area || "").toUpperCase() === "SAFE" || String(p.status || "").toUpperCase() === "SAFE").length;
+
+  adminDirectSetText("playerCount", String(total));
+  adminDirectSetText("hunterCount", String(hunters));
+  adminDirectSetText("runnerCount", String(runners));
+  adminDirectSetText("bossCount", String(bosses));
+  adminDirectSetText("missionCount", String(missions));
+  adminDirectSetText("safeCount", String(safes));
+
+  adminDirectLog("参加者更新: " + total + "人 / RUNNER " + runners + " / HUNTER " + hunters);
+}
+
+function adminDirectInitFirebase(){
+  try{
+    adminDirectStatus("🔥 Firebase: 接続準備中", "status-wait");
+    adminDirectLog("Firebase直接接続開始 v52");
+
+    if(!window.STREET_SURVIVAL_FIREBASE_CONFIG){
+      adminDirectStatus("🔥 Firebase: 設定なし", "status-error");
+      adminDirectLog("Firebase設定がありません");
+      return;
+    }
+
+    if(!window.firebase){
+      adminDirectStatus("🔥 Firebase: 本体未読込", "status-error");
+      adminDirectLog("Firebase本体が読み込まれていません");
+      return;
+    }
+
+    if(!firebase.apps.length){
+      firebase.initializeApp(window.STREET_SURVIVAL_FIREBASE_CONFIG);
+    }
+
+    adminDirectDb = firebase.database();
+
+    adminDirectStatus("🔥 Firebase: 接続OK", "status-ok");
+    adminDirectLog("Firebase直接接続OK v52");
+
+    adminDirectDb.ref("streetSurvival/players").on("value", snap => {
+      const players = snap.val() || {};
+      adminDirectUpdateStats(players);
+    });
+
+  }catch(e){
+    console.error(e);
+    adminDirectStatus("🔥 Firebase: エラー", "status-error");
+    adminDirectLog("Firebase直接接続エラー: " + e.message);
+  }
 }
 
 async function adminTestHuntersDirect(){
   try{
     adminDirectLog("⏱ テスト30秒HUNTERボタン押しました");
 
-    const db = adminDirectGetDb();
+    if(!adminDirectDb){
+      adminDirectLog("Firebase未接続。再接続します");
+      adminDirectInitFirebase();
+      await new Promise(resolve => setTimeout(resolve, 800));
+    }
 
-    const snap = await db.ref("streetSurvival/players").get();
+    if(!adminDirectDb){
+      adminDirectLog("テストHUNTER失敗: Firebase未接続");
+      return;
+    }
+
+    const snap = await adminDirectDb.ref("streetSurvival/players").get();
     const players = snap.val() || {};
     const entries = Object.entries(players).filter(([key, p]) => p);
 
@@ -173,9 +246,7 @@ async function adminTestHuntersDirect(){
 
     const shuffled = entries.sort(() => Math.random() - 0.5);
     const hunterCount = Math.min(3, shuffled.length);
-    const hunterKeys = new Set(
-      shuffled.slice(0, hunterCount).map(([key]) => key)
-    );
+    const hunterKeys = new Set(shuffled.slice(0, hunterCount).map(([key]) => key));
 
     const updates = {};
     const now = Date.now();
@@ -189,14 +260,14 @@ async function adminTestHuntersDirect(){
       updates[key + "/lastSeen"] = now;
     });
 
-    await db.ref("streetSurvival/players").update(updates);
+    await adminDirectDb.ref("streetSurvival/players").update(updates);
 
-    await db.ref("streetSurvival/currentCommand").set({
+    await adminDirectDb.ref("streetSurvival/currentCommand").set({
       id: "test_hunter_" + Date.now(),
       type: "RADIO",
       message: "⏱ テスト30秒HUNTER発生！" + hunterCount + "人がHUNTERになりました！",
       at: new Date().toISOString(),
-      from: "admin-test-direct-v51"
+      from: "admin-direct-v52"
     });
 
     adminDirectLog("テスト30秒HUNTER OK: " + hunterCount + "人");
@@ -207,14 +278,17 @@ async function adminTestHuntersDirect(){
 }
 
 window.addEventListener("load", function(){
-  const btn = document.getElementById("adminTestHuntersBtn");
+  setTimeout(function(){
+    adminDirectInitFirebase();
 
-  if(btn){
-    btn.addEventListener("click", adminTestHuntersDirect);
-    adminDirectLog("⏱ テスト30秒HUNTER直接接続OK v51");
-  }else{
-    adminDirectLog("⚠️ adminTestHuntersBtn が見つかりません");
-  }
+    const btn = document.getElementById("adminTestHuntersBtn");
+    if(btn){
+      btn.addEventListener("click", adminTestHuntersDirect);
+      adminDirectLog("⏱ テスト30秒HUNTER直接接続OK v52");
+    }else{
+      adminDirectLog("⚠️ adminTestHuntersBtn が見つかりません");
+    }
+  }, 700);
 });
 </script>
 
