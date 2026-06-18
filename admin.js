@@ -433,10 +433,11 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   const healBtn = $("adminHealAllBtn");
-  const runnerBtn = $("adminAllRunnerBtn");
-  const randomHuntersBtn = $("adminRandomHuntersBtn");
-  const resetBtn = $("adminResetAllBtn");
-  const cleanupBtn = $("adminCleanupPlayersBtn");
+const runnerBtn = $("adminAllRunnerBtn");
+const randomHuntersBtn = $("adminRandomHuntersBtn");
+const testHuntersBtn = $("adminTestHuntersBtn");
+const resetBtn = $("adminResetAllBtn");
+const cleanupBtn = $("adminCleanupPlayersBtn");
 
   if(healBtn) healBtn.addEventListener("click", adminHealAll);
   if(runnerBtn) runnerBtn.addEventListener("click", adminAllRunner);
@@ -444,13 +445,20 @@ document.addEventListener("DOMContentLoaded", () => {
   if(randomHuntersBtn){
     randomHuntersBtn.addEventListener("click", adminRandomHunters);
     log("🎲 ランダムHUNTERボタン接続OK");
-  }else{
+  }
+    if(testHuntersBtn){
+  testHuntersBtn.addEventListener("click", adminTestHunters);
+  log("⏱ テスト30秒HUNTERボタン接続OK");
+}else{
+  log("⚠️ adminTestHuntersBtn が見つかりません");
+}
+  else{
     log("⚠️ adminRandomHuntersBtn が見つかりません");
   }
 
   if(resetBtn) resetBtn.addEventListener("click", adminResetAll);
   if(cleanupBtn) cleanupBtn.addEventListener("click", adminCleanupPlayers);
 
-  adminV39Status("v46 起動OK");
-log("ADMIN画面 起動完了 v46");
+  adminV39Status("v47 起動OK");
+log("ADMIN画面 起動完了 v47");
 });
