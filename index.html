@@ -125,6 +125,82 @@
 
   <script src="firebase-config.js?v=42"></script>
   <script src="admin.js?v=47"></script>
+  <script>
+async function adminTestHuntersDirect(){
+  try{
+    const logEl = document.getElementById("log");
+    function adminLog(msg){
+      const t = new Date().toLocaleTimeString();
+      if(logEl) logEl.textContent = "[" + t + "] " + msg + "\n" + logEl.textContent;
+      console.log(msg);
+    }
+
+    adminLog("⏱ テスト30秒HUNTERボタン押しました");
+
+    if(!window.firebase){
+      adminLog("Firebase未読込");
+      return;
+    }
+
+    if(!firebase.apps || !firebase.apps.length){
+      firebase.initializeApp(window.STREET_SURVIVAL_FIREBASE_CONFIG);
+    }
+
+    const db = firebase.database();
+    const snap = await db.ref("streetSurvival/players").get();
+    const players = snap.val() || {};
+    const entries = Object.entries(players).filter(([key, p]) => p);
+
+    if(entries.length === 0){
+      adminLog("テストHUNTER失敗: 参加者0人");
+      return;
+    }
+
+    const shuffled = entries.sort(() => Math.random() - 0.5);
+    const hunterCount = Math.min(3, shuffled.length);
+    const hunterKeys = new Set(shuffled.slice(0, hunterCount).map(([key]) => key));
+
+    const updates = {};
+    const now = Date.now();
+
+    entries.forEach(([key, p]) => {
+      const isHunter = hunterKeys.has(key);
+
+      updates[key + "/role"] = isHunter ? "HUNTER" : "RUNNER";
+      updates[key + "/hunterEndsAt"] = isHunter ? now + 30 * 1000 : null;
+      updates[key + "/lastAdminAction"] = "TEST_30SEC_HUNTERS";
+      updates[key + "/lastSeen"] = now;
+    });
+
+    await db.ref("streetSurvival/players").update(updates);
+
+    await db.ref("streetSurvival/currentCommand").set({
+      id: "test_hunter_" + Date.now(),
+      type: "RADIO",
+      message: "⏱ テスト30秒HUNTER発生！" + hunterCount + "人がHUNTERになりました！",
+      at: new Date().toISOString(),
+      from: "admin-test-direct"
+    });
+
+    adminLog("テスト30秒HUNTER OK: " + hunterCount + "人");
+  }catch(e){
+    console.error(e);
+    const logEl = document.getElementById("log");
+    const t = new Date().toLocaleTimeString();
+    if(logEl) logEl.textContent = "[" + t + "] テストHUNTERエラー: " + e.message + "\n" + logEl.textContent;
+  }
+}
+
+window.addEventListener("load", function(){
+  const btn = document.getElementById("adminTestHuntersBtn");
+  if(btn){
+    btn.addEventListener("click", adminTestHuntersDirect);
+    const logEl = document.getElementById("log");
+    const t = new Date().toLocaleTimeString();
+    if(logEl) logEl.textContent = "[" + t + "] ⏱ テスト30秒HUNTER直接接続OK\n" + logEl.textContent;
+  }
+});
+</script>
 </body>
 </html>
 
