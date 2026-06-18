@@ -126,33 +126,58 @@
   <script src="firebase-config.js?v=42"></script>
   <script src="admin.js?v=47"></script>
   <script>
-async function adminTestHuntersDirect(){
-  try{
-    const logEl = document.getElementById("log");
-    function adminLog(msg){
-      const t = new Date().toLocaleTimeString();
-      if(logEl) logEl.textContent = "[" + t + "] " + msg + "\n" + logEl.textContent;
-      console.log(msg);
-    }
+<script>
+/* TEST 30SEC HUNTER DIRECT v49 */
 
-    adminLog("⏱ テスト30秒HUNTERボタン押しました");
+function adminDirectLog(msg){
+  const logEl = document.getElementById("log");
+  const t = new Date().toLocaleTimeString();
+  if(logEl) logEl.textContent = "[" + t + "] " + msg + "\n" + logEl.textContent;
+  console.log(msg);
+}
 
-    if(!window.firebase){
-      adminLog("Firebase未読込");
+function adminDirectLoadScript(src){
+  return new Promise((resolve, reject) => {
+    if(document.querySelector('script[src="' + src + '"]')){
+      resolve();
       return;
     }
 
-    if(!firebase.apps || !firebase.apps.length){
-      firebase.initializeApp(window.STREET_SURVIVAL_FIREBASE_CONFIG);
-    }
+    const s = document.createElement("script");
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = () => reject(new Error("読み込み失敗: " + src));
+    document.head.appendChild(s);
+  });
+}
 
-    const db = firebase.database();
+async function adminDirectGetDb(){
+  await adminDirectLoadScript("https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js");
+  await adminDirectLoadScript("https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js");
+
+  if(!window.STREET_SURVIVAL_FIREBASE_CONFIG){
+    throw new Error("Firebase設定がありません");
+  }
+
+  if(!firebase.apps.length){
+    firebase.initializeApp(window.STREET_SURVIVAL_FIREBASE_CONFIG);
+  }
+
+  return firebase.database();
+}
+
+async function adminTestHuntersDirect(){
+  try{
+    adminDirectLog("⏱ テスト30秒HUNTERボタン押しました");
+
+    const db = await adminDirectGetDb();
+
     const snap = await db.ref("streetSurvival/players").get();
     const players = snap.val() || {};
     const entries = Object.entries(players).filter(([key, p]) => p);
 
     if(entries.length === 0){
-      adminLog("テストHUNTER失敗: 参加者0人");
+      adminDirectLog("テストHUNTER失敗: 参加者0人");
       return;
     }
 
@@ -179,25 +204,24 @@ async function adminTestHuntersDirect(){
       type: "RADIO",
       message: "⏱ テスト30秒HUNTER発生！" + hunterCount + "人がHUNTERになりました！",
       at: new Date().toISOString(),
-      from: "admin-test-direct"
+      from: "admin-test-direct-v49"
     });
 
-    adminLog("テスト30秒HUNTER OK: " + hunterCount + "人");
+    adminDirectLog("テスト30秒HUNTER OK: " + hunterCount + "人");
   }catch(e){
     console.error(e);
-    const logEl = document.getElementById("log");
-    const t = new Date().toLocaleTimeString();
-    if(logEl) logEl.textContent = "[" + t + "] テストHUNTERエラー: " + e.message + "\n" + logEl.textContent;
+    adminDirectLog("テストHUNTERエラー: " + e.message);
   }
 }
 
 window.addEventListener("load", function(){
   const btn = document.getElementById("adminTestHuntersBtn");
+
   if(btn){
     btn.addEventListener("click", adminTestHuntersDirect);
-    const logEl = document.getElementById("log");
-    const t = new Date().toLocaleTimeString();
-    if(logEl) logEl.textContent = "[" + t + "] ⏱ テスト30秒HUNTER直接接続OK\n" + logEl.textContent;
+    adminDirectLog("⏱ テスト30秒HUNTER直接接続OK v49");
+  }else{
+    adminDirectLog("⚠️ adminTestHuntersBtn が見つかりません");
   }
 });
 </script>
