@@ -281,6 +281,58 @@ async function adminRandomHunters(){
     log("ランダムHUNTERエラー: " + e.message);
   }
 }
+async function adminTestHunters(){
+  try{
+    log("⏱ テスト30秒HUNTERボタン押しました");
+
+    if(!firebaseDb){
+      adminV39Status("Firebase未接続");
+      log("テストHUNTER失敗: Firebase未接続");
+      return;
+    }
+
+    const snap = await firebaseDb.ref("streetSurvival/players").get();
+    const players = snap.val() || {};
+
+    const entries = Object.entries(players).filter(([key, p]) => p);
+
+    if(entries.length === 0){
+      adminV39Status("参加者がいません");
+      log("テストHUNTER失敗: 参加者0人");
+      return;
+    }
+
+    const shuffled = entries.sort(() => Math.random() - 0.5);
+    const hunterCount = Math.min(3, shuffled.length);
+    const hunterKeys = new Set(shuffled.slice(0, hunterCount).map(([key]) => key));
+
+    const updates = {};
+    const now = Date.now();
+
+    entries.forEach(([key, p]) => {
+      const isHunter = hunterKeys.has(key);
+
+      updates[key + "/role"] = isHunter ? "HUNTER" : "RUNNER";
+      updates[key + "/hunterEndsAt"] = isHunter ? now + 30 * 1000 : null;
+      updates[key + "/lastAdminAction"] = "TEST_30SEC_HUNTERS";
+      updates[key + "/lastSeen"] = now;
+    });
+
+    await firebaseDb.ref("streetSurvival/players").update(updates);
+
+    await sendCommand(
+      "RADIO",
+      "⏱ テスト30秒HUNTER発生！" + hunterCount + "人がHUNTERになりました！"
+    );
+
+    adminV39Status("テスト30秒HUNTER OK: " + hunterCount + "人");
+    log("テスト30秒HUNTER OK: " + hunterCount + "人");
+  }catch(e){
+    console.error(e);
+    adminV39Status("テストHUNTERエラー: " + e.message);
+    log("テストHUNTERエラー: " + e.message);
+  }
+}
 
 async function adminResetAll(){
   try{
