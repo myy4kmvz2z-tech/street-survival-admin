@@ -290,3 +290,100 @@ body.bossPulse{animation: bossPulse .9s ease}
   border-radius:16px;
   cursor:pointer;
 }
+
+/* Preflight checklist v1.0 */
+.preflight-progress{
+  font-size:20px;
+  font-weight:900;
+  margin:0 0 14px;
+  color:#f7c948;
+}
+.preflight-progress-done{
+  color:#59d68d;
+  font-size:22px;
+}
+.preflight-urls{
+  display:grid;
+  gap:10px;
+  margin-bottom:14px;
+}
+.preflight-url-row{
+  display:grid;
+  gap:8px;
+}
+.preflight-url-label{
+  font-size:13px;
+  color:#aeb7c2;
+  font-weight:700;
+}
+.preflight-url-input{
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid #303b48;
+  background:#05070a;
+  color:#d5dce5;
+  font-size:13px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+.preflight-url-copy{
+  padding:10px 12px;
+  border:0;
+  border-radius:10px;
+  background:#2a3440;
+  color:#f5f1e8;
+  font-size:13px;
+  font-weight:800;
+  cursor:pointer;
+}
+.preflight-checklist{
+  display:grid;
+  gap:8px;
+  margin-bottom:14px;
+}
+.preflight-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 14px;
+  border-radius:12px;
+  background:#05070a;
+  border:1px solid #2d3845;
+  cursor:pointer;
+}
+.preflight-item input[type="checkbox"]{
+  width:20px;
+  height:20px;
+  min-width:20px;
+  margin:0;
+  accent-color:#59d68d;
+  cursor:pointer;
+}
+.preflight-item span{
+  font-size:15px;
+  color:#aeb7c2;
+  line-height:1.4;
+}
+.preflight-item-done{
+  background:#0f1a14;
+  border-color:#2d6b4a;
+}
+.preflight-item-done span{
+  color:#d5dce5;
+}
+.preflight-reset-btn{
+  width:100%;
+  padding:12px 16px;
+  border:0;
+  border-radius:14px;
+  background:#2a3440;
+  color:#f5f1e8;
+  font-size:15px;
+  font-weight:800;
+  cursor:pointer;
+}
+@media(max-width:560px){
+  .preflight-progress{font-size:18px}
+  .preflight-item{padding:14px 12px}
+  .preflight-item span{font-size:14px}
+}

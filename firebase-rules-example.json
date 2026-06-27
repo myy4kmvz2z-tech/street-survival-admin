@@ -24,6 +24,10 @@
       "emergency": {
         ".read": true,
         ".write": true
+      },
+      "preflightChecklist": {
+        ".read": true,
+        ".write": true
       }
     }
   }

@@ -49,6 +49,48 @@
       </div>
     </section>
 
+    <section class="panel panel-preflight">
+      <h3>✅ 本番前チェックリスト v1.0</h3>
+      <p id="preflightProgress" class="preflight-progress">進捗：0 / 19 完了</p>
+
+      <div class="preflight-urls">
+        <div class="preflight-url-row">
+          <span class="preflight-url-label">参加者側</span>
+          <input class="preflight-url-input" id="playerUrlDisplay" readonly value="https://myy4kmvz2z-tech.github.io/street-survival-beta/index.html?v=56">
+          <button type="button" id="copyPlayerUrlBtn" class="preflight-url-copy">参加者URLコピー</button>
+        </div>
+        <div class="preflight-url-row">
+          <span class="preflight-url-label">運営側</span>
+          <input class="preflight-url-input" id="adminUrlDisplay" readonly value="https://myy4kmvz2z-tech.github.io/street-survival-admin/index.html?v=105">
+          <button type="button" id="copyAdminUrlBtn" class="preflight-url-copy">運営URLコピー</button>
+        </div>
+      </div>
+
+      <div id="preflightChecklist" class="preflight-checklist">
+        <label class="preflight-item" id="preflight_row_firebaseOk"><input type="checkbox" id="preflight_firebaseOk"><span>Firebase接続OK</span></label>
+        <label class="preflight-item" id="preflight_row_playerUrlOk"><input type="checkbox" id="preflight_playerUrlOk"><span>参加者側URLを開ける</span></label>
+        <label class="preflight-item" id="preflight_row_adminUrlOk"><input type="checkbox" id="preflight_adminUrlOk"><span>運営側URLを開ける</span></label>
+        <label class="preflight-item" id="preflight_row_registrationOk"><input type="checkbox" id="preflight_registrationOk"><span>参加者登録テストOK</span></label>
+        <label class="preflight-item" id="preflight_row_nicknameOk"><input type="checkbox" id="preflight_nicknameOk"><span>ニックネーム表示OK</span></label>
+        <label class="preflight-item" id="preflight_row_playerListOk"><input type="checkbox" id="preflight_playerListOk"><span>運営側の参加者一覧に反映OK</span></label>
+        <label class="preflight-item" id="preflight_row_testHunterOk"><input type="checkbox" id="preflight_testHunterOk"><span>テストHUNTER OK</span></label>
+        <label class="preflight-item" id="preflight_row_hunterSecondsOk"><input type="checkbox" id="preflight_hunterSecondsOk"><span>HUNTER秒数反映OK</span></label>
+        <label class="preflight-item" id="preflight_row_allRunnerOk"><input type="checkbox" id="preflight_allRunnerOk"><span>全員RUNNER OK</span></label>
+        <label class="preflight-item" id="preflight_row_radioOk"><input type="checkbox" id="preflight_radioOk"><span>RADIO送信OK</span></label>
+        <label class="preflight-item" id="preflight_row_bossOk"><input type="checkbox" id="preflight_bossOk"><span>BOSS発令OK</span></label>
+        <label class="preflight-item" id="preflight_row_missionOk"><input type="checkbox" id="preflight_missionOk"><span>MISSION発令OK</span></label>
+        <label class="preflight-item" id="preflight_row_emergencyOk"><input type="checkbox" id="preflight_emergencyOk"><span>緊急停止OK</span></label>
+        <label class="preflight-item" id="preflight_row_emergencyClearOk"><input type="checkbox" id="preflight_emergencyClearOk"><span>緊急停止解除OK</span></label>
+        <label class="preflight-item" id="preflight_row_locationOk"><input type="checkbox" id="preflight_locationOk"><span>位置情報チェックOK</span></label>
+        <label class="preflight-item" id="preflight_row_notificationOk"><input type="checkbox" id="preflight_notificationOk"><span>通知許可チェックOK</span></label>
+        <label class="preflight-item" id="preflight_row_mobileOk"><input type="checkbox" id="preflight_mobileOk"><span>スマホ表示OK</span></label>
+        <label class="preflight-item" id="preflight_row_qrOk"><input type="checkbox" id="preflight_qrOk"><span>QRコード読み込みOK</span></label>
+        <label class="preflight-item" id="preflight_row_staffShareOk"><input type="checkbox" id="preflight_staffShareOk"><span>スタッフ共有OK</span></label>
+      </div>
+
+      <button type="button" id="resetPreflightBtn" class="preflight-reset-btn">🔄 チェックをリセット</button>
+    </section>
+
     <section class="panel">
       <h3>🌆 街ステータス v1.0</h3>
       <div class="stats">
@@ -122,6 +164,30 @@
 
   <script>
     let db = null;
+    let preflightLoading = false;
+    let preflightState = {};
+
+    const PREFLIGHT_ITEMS = [
+      { key: "firebaseOk", label: "Firebase接続OK" },
+      { key: "playerUrlOk", label: "参加者側URLを開ける" },
+      { key: "adminUrlOk", label: "運営側URLを開ける" },
+      { key: "registrationOk", label: "参加者登録テストOK" },
+      { key: "nicknameOk", label: "ニックネーム表示OK" },
+      { key: "playerListOk", label: "運営側の参加者一覧に反映OK" },
+      { key: "testHunterOk", label: "テストHUNTER OK" },
+      { key: "hunterSecondsOk", label: "HUNTER秒数反映OK" },
+      { key: "allRunnerOk", label: "全員RUNNER OK" },
+      { key: "radioOk", label: "RADIO送信OK" },
+      { key: "bossOk", label: "BOSS発令OK" },
+      { key: "missionOk", label: "MISSION発令OK" },
+      { key: "emergencyOk", label: "緊急停止OK" },
+      { key: "emergencyClearOk", label: "緊急停止解除OK" },
+      { key: "locationOk", label: "位置情報チェックOK" },
+      { key: "notificationOk", label: "通知許可チェックOK" },
+      { key: "mobileOk", label: "スマホ表示OK" },
+      { key: "qrOk", label: "QRコード読み込みOK" },
+      { key: "staffShareOk", label: "スタッフ共有OK" }
+    ];
 
     const $ = id => document.getElementById(id);
 
@@ -706,6 +772,147 @@
       }
     }
 
+    function getDefaultPreflight(){
+      const data = {};
+      PREFLIGHT_ITEMS.forEach(item => {
+        data[item.key] = false;
+      });
+      return data;
+    }
+
+    function isPreflightComplete(data){
+      return PREFLIGHT_ITEMS.every(item => data[item.key] === true);
+    }
+
+    function applyPreflightToForm(data){
+      PREFLIGHT_ITEMS.forEach(item => {
+        const cb = $("preflight_" + item.key);
+        const row = $("preflight_row_" + item.key);
+        const checked = !!(data && data[item.key]);
+
+        if(cb) cb.checked = checked;
+        if(row){
+          row.className = checked ? "preflight-item preflight-item-done" : "preflight-item";
+        }
+      });
+
+      updatePreflightProgress(data || getDefaultPreflight());
+    }
+
+    function collectPreflightFromForm(){
+      const data = getDefaultPreflight();
+      PREFLIGHT_ITEMS.forEach(item => {
+        const cb = $("preflight_" + item.key);
+        data[item.key] = cb ? !!cb.checked : false;
+      });
+      data.updatedAt = Date.now();
+      return data;
+    }
+
+    function updatePreflightProgress(data){
+      const done = PREFLIGHT_ITEMS.filter(item => data[item.key]).length;
+      const total = PREFLIGHT_ITEMS.length;
+      const el = $("preflightProgress");
+
+      if(!el) return;
+
+      if(done === total){
+        el.textContent = "🎉 本番準備OK";
+        el.className = "preflight-progress preflight-progress-done";
+      }else{
+        el.textContent = "進捗：" + done + " / " + total + " 完了";
+        el.className = "preflight-progress";
+      }
+    }
+
+    async function savePreflightChecklist(userInitiated){
+      if(preflightLoading || !db) return;
+
+      try{
+        const wasComplete = isPreflightComplete(preflightState);
+        const data = collectPreflightFromForm();
+        await db.ref("streetSurvival/preflightChecklist").set(data);
+        preflightState = data;
+
+        if(userInitiated && !wasComplete && isPreflightComplete(data)){
+          addAdminLog("PREFLIGHT", "✅ 本番前チェックリストが全て完了しました");
+          log("✅ 本番前チェックリストが全て完了しました");
+        }
+      }catch(e){
+        const msg = (e && e.message) || String(e);
+
+        if(/permission/i.test(msg)){
+          log("チェックリスト保存エラー: Firebase Rulesで preflightChecklist への書き込みが許可されていません");
+        }else{
+          log("チェックリスト保存エラー: " + msg);
+        }
+
+        console.warn("savePreflightChecklist:", e);
+      }
+    }
+
+    async function resetPreflightChecklist(){
+      const ok = confirm("本番前チェックリストをリセットしますか？");
+      if(!ok){
+        log("チェックリストリセットをキャンセル");
+        return;
+      }
+
+      if(!(await ensureDbReady())){
+        log("チェックリスト保存エラー: Firebase未接続");
+        return;
+      }
+
+      try{
+        preflightLoading = true;
+        const data = getDefaultPreflight();
+        data.updatedAt = Date.now();
+        await db.ref("streetSurvival/preflightChecklist").set(data);
+        preflightState = data;
+        applyPreflightToForm(data);
+        addAdminLog("PREFLIGHT_RESET", "🔄 本番前チェックリストをリセットしました");
+        log("🔄 本番前チェックリストをリセットしました");
+      }catch(e){
+        const msg = (e && e.message) || String(e);
+        log("チェックリスト保存エラー: " + msg);
+        console.warn("resetPreflightChecklist:", e);
+      }finally{
+        preflightLoading = false;
+      }
+    }
+
+    function handlePreflightChange(){
+      applyPreflightToForm(collectPreflightFromForm());
+      savePreflightChecklist(true);
+    }
+
+    async function copyPreflightUrl(inputId, label){
+      const input = $(inputId);
+      const text = input ? input.value : "";
+
+      if(!text){
+        log(label + "コピー失敗: URLなし");
+        return;
+      }
+
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        try{
+          await navigator.clipboard.writeText(text);
+          showToast(label + "をコピーしました");
+          log(label + "をコピーしました");
+          return;
+        }catch(e){
+          console.warn("clipboard:", e);
+        }
+      }
+
+      if(input){
+        input.focus();
+        input.select();
+        showToast(label + "を選択しました（手動でコピーしてください）");
+      }
+    }
+
     function initFirebase(){
       try{
         setStatus("🔥 Firebase: 接続準備中", "status-wait");
@@ -777,6 +984,25 @@
             log("緊急停止エラー: Firebase Rulesで emergency への読み込みが許可されていません");
           }else{
             log("緊急停止エラー: " + msg);
+          }
+        });
+
+        db.ref("streetSurvival/preflightChecklist").on("value", snap => {
+          try{
+            preflightLoading = true;
+            preflightState = { ...getDefaultPreflight(), ...(snap.val() || {}) };
+            applyPreflightToForm(preflightState);
+          }catch(e){
+            log("チェックリスト読込エラー: " + e.message);
+          }finally{
+            preflightLoading = false;
+          }
+        }, err => {
+          const msg = (err && err.message) || err;
+          if(/permission/i.test(String(msg))){
+            log("チェックリスト読込エラー: Firebase Rulesで preflightChecklist への読み込みが許可されていません");
+          }else{
+            log("チェックリスト読込エラー: " + msg);
           }
         });
 
@@ -1066,6 +1292,34 @@
         emergencyClearBtn.addEventListener("click", clearEmergencyState);
       }else{
         log("⚠️ emergencyClearBtn が見つかりません");
+      }
+
+      const preflightChecklist = $("preflightChecklist");
+      if(preflightChecklist){
+        preflightChecklist.addEventListener("change", e => {
+          if(e.target && e.target.type === "checkbox"){
+            handlePreflightChange();
+          }
+        });
+      }else{
+        log("⚠️ preflightChecklist が見つかりません");
+      }
+
+      const resetPreflightBtn = $("resetPreflightBtn");
+      if(resetPreflightBtn){
+        resetPreflightBtn.addEventListener("click", resetPreflightChecklist);
+      }else{
+        log("⚠️ resetPreflightBtn が見つかりません");
+      }
+
+      const copyPlayerUrlBtn = $("copyPlayerUrlBtn");
+      if(copyPlayerUrlBtn){
+        copyPlayerUrlBtn.addEventListener("click", () => copyPreflightUrl("playerUrlDisplay", "参加者URL"));
+      }
+
+      const copyAdminUrlBtn = $("copyAdminUrlBtn");
+      if(copyAdminUrlBtn){
+        copyAdminUrlBtn.addEventListener("click", () => copyPreflightUrl("adminUrlDisplay", "運営URL"));
       }
 
       const saveSettingsBtn = $("saveSettingsBtn");
