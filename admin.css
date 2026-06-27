@@ -139,3 +139,26 @@ body.bossPulse{animation: bossPulse .9s ease}
   35%{filter:contrast(1.25) brightness(1.15)}
   60%{filter:contrast(1.1) brightness(.9)}
 }
+
+/* Player list v1.0 */
+.player-list{display:grid;gap:10px}
+.player-list-empty{color:#aeb7c2;font-size:15px;margin:0;padding:4px 0}
+.player-card{background:#05070a;border:1px solid #2d3845;border-radius:14px;padding:12px}
+.player-card-name{font-size:18px;font-weight:900;margin:0 0 6px;color:#f5f1e8}
+.player-card-meta{font-size:14px;color:#aeb7c2;line-height:1.6;margin:0 0 4px}
+.player-card-time{font-size:12px;color:#7a8491;margin:0 0 10px}
+.role-runner{color:#7dd3fc;font-weight:800}
+.role-hunter{color:#59d68d;font-weight:800}
+.role-boss{color:#ff6b6b;font-weight:800}
+.role-safe{color:#77ead7;font-weight:800}
+.role-unknown{color:#c8cdd4;font-weight:800}
+.player-card-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.player-card-actions button{padding:10px 8px;font-size:12px;font-weight:800;border:0;border-radius:10px;cursor:pointer;line-height:1.3}
+.player-btn-runner{background:#1a2a3a;color:#7dd3fc;border:1px solid #2d5570}
+.player-btn-hunter{background:#14281f;color:#59d68d;border:1px solid #2d6b4a}
+.player-btn-heal{background:#2a1f14;color:#f7c948;border:1px solid #6b542d}
+.player-btn-delete{background:#2a1212;color:#ff8a8a;border:1px solid #6b2d2d}
+@media(max-width:560px){
+  .player-card-actions{grid-template-columns:1fr 1fr}
+  .player-card-actions button{font-size:11px;padding:10px 6px}
+}

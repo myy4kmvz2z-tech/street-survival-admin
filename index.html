@@ -53,6 +53,13 @@
     </section>
 
     <section class="panel">
+      <h3>👥 参加者一覧 v1.0</h3>
+      <div id="playerList" class="player-list">
+        <p class="player-list-empty">参加者はまだいません</p>
+      </div>
+    </section>
+
+    <section class="panel">
       <h3>⚙ イベント設定 v1.0</h3>
       <div style="display:grid;gap:10px;">
         <label style="display:block;font-size:14px;color:#aeb7c2;">イベント名<input id="eventNameInput" value="STREET SURVIVAL"></label>
@@ -258,6 +265,215 @@
       return String((p && p.role) || "RUNNER").toUpperCase();
     }
 
+    function escapeHtml(text){
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function parseTime(value){
+      if(value == null || value === "") return null;
+      if(typeof value === "number") return value;
+      const n = Number(value);
+      if(!Number.isNaN(n) && n > 0) return n;
+      const d = Date.parse(String(value));
+      return Number.isNaN(d) ? null : d;
+    }
+
+    function formatTimeAgo(value){
+      const ts = parseTime(value);
+      if(!ts) return "";
+      const diff = Date.now() - ts;
+      if(diff < 0) return "たった今";
+      const sec = Math.floor(diff / 1000);
+      if(sec < 60) return sec + "秒前";
+      const min = Math.floor(sec / 60);
+      if(min < 60) return min + "分前";
+      const hour = Math.floor(min / 60);
+      if(hour < 24) return hour + "時間前";
+      return Math.floor(hour / 24) + "日前";
+    }
+
+    function roleDisplay(role){
+      const r = String(role || "").toUpperCase();
+      if(r === "RUNNER") return "🔵 RUNNER";
+      if(r === "HUNTER") return "🟢 HUNTER";
+      if(r === "BOSS") return "👹 BOSS";
+      if(r === "SAFE") return "🛡 SAFE";
+      return "⚪ UNKNOWN";
+    }
+
+    function roleClass(role){
+      const r = String(role || "").toUpperCase();
+      if(r === "RUNNER") return "role-runner";
+      if(r === "HUNTER") return "role-hunter";
+      if(r === "BOSS") return "role-boss";
+      if(r === "SAFE") return "role-safe";
+      return "role-unknown";
+    }
+
+    function getHunterMinutes(){
+      return Number($("hunterMinutesInput")?.value) || 10;
+    }
+
+    function getMaxHp(){
+      return Number($("maxHpInput")?.value) || 300;
+    }
+
+    function playerNickname(p, id){
+      return (p && (p.nickname || p.name)) || id;
+    }
+
+    function renderPlayerList(players){
+      const container = $("playerList");
+      if(!container) return;
+
+      const entries = Object.entries(players || {}).filter(([id, p]) => p && typeof p === "object");
+
+      if(entries.length === 0){
+        container.innerHTML = '<p class="player-list-empty">参加者はまだいません</p>';
+        return;
+      }
+
+      entries.sort((a, b) => {
+        const ta = parseTime(a[1].updatedAt) || parseTime(a[1].joinedAt) || 0;
+        const tb = parseTime(b[1].updatedAt) || parseTime(b[1].joinedAt) || 0;
+        return tb - ta;
+      });
+
+      container.innerHTML = entries.map(([id, p]) => {
+        const nickname = playerNickname(p, id);
+        const role = roleOf(p);
+        const hp = Number(p.hp ?? 0);
+        const points = Number(p.points ?? 0);
+        const onlineText = p.online === true ? "ONLINE" : "OFFLINE";
+        const ago = formatTimeAgo(p.updatedAt);
+        const safeId = escapeHtml(id);
+        const safeName = escapeHtml(nickname);
+
+        return (
+          '<div class="player-card" data-player-id="' + safeId + '">' +
+            '<div class="player-card-name">' + safeName + '</div>' +
+            '<div class="player-card-meta">' +
+              '<span class="' + roleClass(role) + '">' + roleDisplay(role) + '</span>' +
+              ' / HP:' + hp + ' / POINT:' + points + ' / ' + onlineText +
+            '</div>' +
+            (ago ? '<div class="player-card-time">' + escapeHtml(ago) + '</div>' : '') +
+            '<div class="player-card-actions">' +
+              '<button type="button" class="player-btn-runner" data-action="runner" data-id="' + safeId + '" data-name="' + safeName + '">🔵 RUNNERにする</button>' +
+              '<button type="button" class="player-btn-hunter" data-action="hunter" data-id="' + safeId + '" data-name="' + safeName + '">🟢 HUNTERにする</button>' +
+              '<button type="button" class="player-btn-heal" data-action="heal" data-id="' + safeId + '" data-name="' + safeName + '">❤️ HP回復</button>' +
+              '<button type="button" class="player-btn-delete" data-action="delete" data-id="' + safeId + '" data-name="' + safeName + '">🗑 削除</button>' +
+            '</div>' +
+          '</div>'
+        );
+      }).join("");
+    }
+
+    async function ensureDbReady(){
+      if(!db){
+        initFirebase();
+        await new Promise(resolve => setTimeout(resolve, 800));
+      }
+      return !!db;
+    }
+
+    async function setPlayerRunner(playerId, nickname){
+      try{
+        if(!(await ensureDbReady())){
+          log("参加者操作失敗: Firebase未接続");
+          return;
+        }
+
+        const now = Date.now();
+        await db.ref("streetSurvival/players/" + playerId).update({
+          role: "RUNNER",
+          hunterUntil: null,
+          updatedAt: now
+        });
+
+        log("🔵 RUNNER化: " + nickname);
+      }catch(e){
+        log("参加者一覧エラー: " + e.message);
+      }
+    }
+
+    async function setPlayerHunter(playerId, nickname){
+      try{
+        if(!(await ensureDbReady())){
+          log("参加者操作失敗: Firebase未接続");
+          return;
+        }
+
+        const now = Date.now();
+        const minutes = getHunterMinutes();
+        await db.ref("streetSurvival/players/" + playerId).update({
+          role: "HUNTER",
+          hunterUntil: now + minutes * 60 * 1000,
+          updatedAt: now
+        });
+
+        log("🟢 HUNTER化: " + nickname + " / " + minutes + "分");
+      }catch(e){
+        log("参加者一覧エラー: " + e.message);
+      }
+    }
+
+    async function healPlayer(playerId, nickname){
+      try{
+        if(!(await ensureDbReady())){
+          log("参加者操作失敗: Firebase未接続");
+          return;
+        }
+
+        const maxHp = getMaxHp();
+        await db.ref("streetSurvival/players/" + playerId).update({
+          hp: maxHp,
+          updatedAt: Date.now()
+        });
+
+        log("❤️ HP回復: " + nickname + " / HP:" + maxHp);
+      }catch(e){
+        log("参加者一覧エラー: " + e.message);
+      }
+    }
+
+    async function deletePlayer(playerId, nickname){
+      try{
+        if(!(await ensureDbReady())){
+          log("参加者操作失敗: Firebase未接続");
+          return;
+        }
+
+        const ok = confirm('参加者「' + nickname + '」を削除しますか？');
+        if(!ok){
+          log("参加者削除をキャンセル: " + nickname);
+          return;
+        }
+
+        await db.ref("streetSurvival/players/" + playerId).remove();
+        log("🗑 参加者削除: " + nickname);
+      }catch(e){
+        log("参加者一覧エラー: " + e.message);
+      }
+    }
+
+    function handlePlayerListClick(e){
+      const btn = e.target.closest("[data-action]");
+      if(!btn || !btn.dataset.id) return;
+
+      const playerId = btn.dataset.id;
+      const nickname = btn.dataset.name || playerId;
+      const action = btn.dataset.action;
+
+      if(action === "runner") setPlayerRunner(playerId, nickname);
+      else if(action === "hunter") setPlayerHunter(playerId, nickname);
+      else if(action === "heal") healPlayer(playerId, nickname);
+      else if(action === "delete") deletePlayer(playerId, nickname);
+    }
+
     function updateStats(players){
       const list = players || {};
       const values = Object.values(list);
@@ -305,13 +521,20 @@
         log("v1.0 Firebase接続OK");
 
         db.ref("streetSurvival/players").on("value", snap => {
-          const players = snap.val() || {};
-          updateStats(players);
+          try{
+            const players = snap.val() || {};
+            updateStats(players);
+            renderPlayerList(players);
 
-          const values = Object.values(players);
-          const hunters = values.filter(p => roleOf(p) === "HUNTER").length;
-          const runners = values.filter(p => roleOf(p) === "RUNNER").length;
-          log("参加者更新: " + values.length + "人 / RUNNER " + runners + " / HUNTER " + hunters);
+            const values = Object.values(players);
+            const hunters = values.filter(p => roleOf(p) === "HUNTER").length;
+            const runners = values.filter(p => roleOf(p) === "RUNNER").length;
+            log("参加者更新: " + values.length + "人 / RUNNER " + runners + " / HUNTER " + hunters);
+          }catch(e){
+            log("参加者一覧エラー: " + e.message);
+          }
+        }, err => {
+          log("参加者一覧エラー: " + ((err && err.message) || err));
         });
 
         loadSettings();
@@ -582,6 +805,13 @@
         saveSettingsBtn.addEventListener("click", saveSettings);
       }else{
         log("⚠️ saveSettingsBtn が見つかりません");
+      }
+
+      const playerList = $("playerList");
+      if(playerList){
+        playerList.addEventListener("click", handlePlayerListClick);
+      }else{
+        log("⚠️ playerList が見つかりません");
       }
 
       $("testHunterBtn").addEventListener("click", testHunter30);
