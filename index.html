@@ -40,6 +40,15 @@
       <button id="radioSend" class="send">📻 RADIOを送信</button>
     </section>
 
+    <section class="panel panel-emergency">
+      <h3>🚨 緊急停止 v1.0</h3>
+      <p id="emergencyStatus" class="emergency-status emergency-normal">状態：✅ 通常運営中</p>
+      <div class="emergency-actions">
+        <button id="emergencyStopBtn" type="button" class="emergency-stop-btn">🚨 緊急停止する</button>
+        <button id="emergencyClearBtn" type="button" class="emergency-clear-btn">✅ 緊急停止を解除</button>
+      </div>
+    </section>
+
     <section class="panel">
       <h3>🌆 街ステータス v1.0</h3>
       <div class="stats">
@@ -615,6 +624,88 @@
       setText("safeCount", safes);
     }
 
+    const EMERGENCY_MESSAGE = "🚨 ゲーム一時停止中。安全確認してください。運営の指示に従ってください。";
+    const NORMAL_MESSAGE = "通常運営中";
+
+    function updateEmergencyStatus(data){
+      const el = $("emergencyStatus");
+      if(!el) return;
+
+      const active = !!(data && data.active === true);
+      el.textContent = active ? "状態：🚨 緊急停止中" : "状態：✅ 通常運営中";
+      el.className = active ? "emergency-status emergency-active" : "emergency-status emergency-normal";
+    }
+
+    async function activateEmergency(){
+      try{
+        if(!(await ensureDbReady())){
+          log("緊急停止エラー: Firebase未接続");
+          return;
+        }
+
+        const ok = confirm("本当に緊急停止しますか？参加者全員に停止表示が出ます。");
+        if(!ok){
+          log("緊急停止をキャンセル");
+          return;
+        }
+
+        const now = Date.now();
+        await db.ref("streetSurvival/emergency").set({
+          active: true,
+          message: EMERGENCY_MESSAGE,
+          updatedAt: now
+        });
+
+        await db.ref("streetSurvival/currentCommand").set({
+          type: "EMERGENCY",
+          message: EMERGENCY_MESSAGE,
+          createdAt: now
+        });
+
+        addAdminLog("EMERGENCY", "🚨 緊急停止を発令しました");
+        showToast("緊急停止を発令しました");
+        log("🚨 緊急停止を発令しました");
+      }catch(e){
+        log("緊急停止エラー: " + e.message);
+        console.error("activateEmergency:", e);
+      }
+    }
+
+    async function clearEmergencyState(){
+      try{
+        if(!(await ensureDbReady())){
+          log("緊急停止エラー: Firebase未接続");
+          return;
+        }
+
+        const ok = confirm("緊急停止を解除して通常運営に戻しますか？");
+        if(!ok){
+          log("緊急停止解除をキャンセル");
+          return;
+        }
+
+        const now = Date.now();
+        await db.ref("streetSurvival/emergency").set({
+          active: false,
+          message: NORMAL_MESSAGE,
+          updatedAt: now
+        });
+
+        await db.ref("streetSurvival/currentCommand").set({
+          type: "NORMAL",
+          message: NORMAL_MESSAGE,
+          createdAt: now
+        });
+
+        addAdminLog("EMERGENCY_CLEAR", "✅ 緊急停止を解除しました");
+        showToast("緊急停止を解除しました");
+        log("✅ 緊急停止を解除しました");
+      }catch(e){
+        log("緊急停止エラー: " + e.message);
+        console.error("clearEmergencyState:", e);
+      }
+    }
+
     function initFirebase(){
       try{
         setStatus("🔥 Firebase: 接続準備中", "status-wait");
@@ -671,6 +762,21 @@
             log("運営ログ表示エラー: Firebase Rulesで adminLogs への読み込みが許可されていません");
           }else{
             log("運営ログ表示エラー: " + msg);
+          }
+        });
+
+        db.ref("streetSurvival/emergency").on("value", snap => {
+          try{
+            updateEmergencyStatus(snap.val());
+          }catch(e){
+            log("緊急停止エラー: " + e.message);
+          }
+        }, err => {
+          const msg = (err && err.message) || err;
+          if(/permission/i.test(String(msg))){
+            log("緊急停止エラー: Firebase Rulesで emergency への読み込みが許可されていません");
+          }else{
+            log("緊急停止エラー: " + msg);
           }
         });
 
@@ -947,6 +1053,20 @@
       $("radioSend").addEventListener("click", () => {
         sendCommand("RADIO", $("radioInput")?.value || "運営速報");
       });
+
+      const emergencyStopBtn = $("emergencyStopBtn");
+      if(emergencyStopBtn){
+        emergencyStopBtn.addEventListener("click", activateEmergency);
+      }else{
+        log("⚠️ emergencyStopBtn が見つかりません");
+      }
+
+      const emergencyClearBtn = $("emergencyClearBtn");
+      if(emergencyClearBtn){
+        emergencyClearBtn.addEventListener("click", clearEmergencyState);
+      }else{
+        log("⚠️ emergencyClearBtn が見つかりません");
+      }
 
       const saveSettingsBtn = $("saveSettingsBtn");
       if(saveSettingsBtn){

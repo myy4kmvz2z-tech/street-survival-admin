@@ -20,6 +20,10 @@
       "adminLogs": {
         ".read": true,
         ".write": true
+      },
+      "emergency": {
+        ".read": true,
+        ".write": true
       }
     }
   }

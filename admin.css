@@ -258,3 +258,35 @@ body.bossPulse{animation: bossPulse .9s ease}
   background:#2a3440;
   color:#f5f1e8;
 }
+
+/* Emergency stop v1.0 */
+.emergency-status{
+  font-size:16px;
+  font-weight:800;
+  margin:0 0 14px;
+}
+.emergency-status.emergency-active{color:#ff6b6b}
+.emergency-status.emergency-normal{color:#59d68d}
+.emergency-actions{display:grid;gap:10px}
+.emergency-stop-btn{
+  width:100%;
+  padding:18px 16px;
+  font-size:18px;
+  font-weight:900;
+  background:#b91c1c;
+  color:#fff;
+  border:0;
+  border-radius:16px;
+  cursor:pointer;
+}
+.emergency-clear-btn{
+  width:100%;
+  padding:14px 16px;
+  font-size:16px;
+  font-weight:800;
+  background:#59d68d;
+  color:#071009;
+  border:0;
+  border-radius:16px;
+  cursor:pointer;
+}
