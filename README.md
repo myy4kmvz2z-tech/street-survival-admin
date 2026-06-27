@@ -24,3 +24,22 @@
 ## 注意
 
 Safariが古いJSを読んでいる場合は、URL末尾に `?v=13` を付けてください。
+
+## Firebase Rules設定
+
+イベント設定 v1.0 の「💾 設定を保存」で `PERMISSION_DENIED` が出る場合、Realtime Database の Rules で `streetSurvival/settings` への read/write が許可されていません。
+
+### 設定手順
+
+1. [Firebase Console](https://console.firebase.google.com/) を開く
+2. **Realtime Database** を開く
+3. **Rules** タブを開く
+4. このリポジトリの `firebase-rules-example.json` の内容を貼り付ける
+5. **Publish** を押す
+6. 運営画面で **💾 設定を保存** を再度試し、**設定: 保存OK** になることを確認する
+
+### ルール例ファイル
+
+- `firebase-rules-example.json` — `players` / `currentCommand` / `commandLog` / `settings` への read/write を許可する例
+
+本番運用では必要最小限の権限に絞ることを推奨します。

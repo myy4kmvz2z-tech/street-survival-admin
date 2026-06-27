@@ -223,10 +223,20 @@
         showToast("設定を保存しました");
         log("イベント設定を保存しました");
       }catch(e){
-        const detail = firebaseErrorDetail(e, "書き込み");
-        const errText = e && e.message ? e.message : detail;
-        setSettingsStatus("設定: 保存エラー: " + errText);
-        log("設定保存エラー: " + detail);
+        const code = (e && (e.code || e.name)) || "";
+        const message = (e && e.message) || String(e);
+        const isPermissionDenied = code === "PERMISSION_DENIED" || /permission/i.test(String(code)) || /permission/i.test(message);
+
+        if(isPermissionDenied){
+          setSettingsStatus("設定: 保存エラー: " + message);
+          log("設定保存エラー: Firebase Rulesで settings への書き込みが許可されていません");
+        }else{
+          const detail = firebaseErrorDetail(e, "書き込み");
+          const errText = message || detail;
+          setSettingsStatus("設定: 保存エラー: " + errText);
+          log("設定保存エラー: " + detail);
+        }
+
         console.error("saveSettings:", e);
       }
     }

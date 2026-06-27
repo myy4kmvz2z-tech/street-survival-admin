@@ -1,0 +1,22 @@
+{
+  "rules": {
+    "streetSurvival": {
+      "players": {
+        ".read": true,
+        ".write": true
+      },
+      "currentCommand": {
+        ".read": true,
+        ".write": true
+      },
+      "commandLog": {
+        ".read": true,
+        ".write": true
+      },
+      "settings": {
+        ".read": true,
+        ".write": true
+      }
+    }
+  }
+}
