@@ -36,6 +36,10 @@
       "areaSettings": {
         ".read": true,
         ".write": true
+      },
+      "safeZones": {
+        ".read": true,
+        ".write": true
       }
     }
   }

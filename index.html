@@ -306,6 +306,33 @@
       <p id="areaSettingsStatus" class="area-settings-status">エリア設定: 初期値を使用中</p>
     </section>
 
+    <section class="panel panel-safe-zones">
+      <h3>🛡 SAFEゾーン管理 v1.0</h3>
+      <p id="safeZoneStatus" class="safe-zone-status">SAFEゾーン: 読込待ち</p>
+
+      <div class="safe-zone-add">
+        <h4>SAFEゾーン追加</h4>
+        <label class="safe-zone-field">名称<input id="safeZoneNameInput" value="お宿 Onn"></label>
+        <label class="safe-zone-field">緯度<input id="safeZoneLatInput" type="number" step="any"></label>
+        <label class="safe-zone-field">経度<input id="safeZoneLngInput" type="number" step="any"></label>
+        <label class="safe-zone-field">半径m<input id="safeZoneRadiusInput" type="number" step="1" value="80"></label>
+        <label class="safe-zone-check">
+          <input type="checkbox" id="safeZoneHealerCheck">
+          <span>❤️ ヒーラーゾーンにする</span>
+        </label>
+        <label class="safe-zone-field">回復量<input id="safeZoneHealAmountInput" type="number" value="2"></label>
+        <label class="safe-zone-field">回復間隔 秒<input id="safeZoneHealIntervalInput" type="number" value="5"></label>
+        <div class="safe-zone-add-actions">
+          <button type="button" id="addSafeZoneBtn" class="safe-zone-add-btn">🛡 SAFEゾーン追加</button>
+          <button type="button" id="addSafeZoneCurrentBtn" class="safe-zone-geo-btn">📍 現在地で追加</button>
+        </div>
+      </div>
+
+      <div id="safeZoneList" class="safe-zone-list">
+        <p class="safe-zone-empty">SAFEゾーンはまだありません</p>
+      </div>
+    </section>
+
     <section class="panel">
       <h3>🛠 ADMIN CONTROL v1.0</h3>
       <div style="display:grid;gap:10px;">
@@ -602,6 +629,329 @@
         "新町",
         "📍 現在地を新町に設定しました"
       );
+    }
+
+    let safeZonesCache = {};
+
+    const DEFAULT_HEAL_AMOUNT = 2;
+    const DEFAULT_HEAL_INTERVAL_SEC = 5;
+
+    function setSafeZoneStatus(text){
+      const el = $("safeZoneStatus");
+      if(el) el.textContent = text;
+    }
+
+    function validateHealerValues(healAmount, healIntervalSec){
+      const amount = Number(healAmount);
+      const interval = Number(healIntervalSec);
+      if(!Number.isFinite(amount) || !Number.isFinite(interval)) return false;
+      if(amount < 1 || amount > 50) return false;
+      if(interval < 1 || interval > 60) return false;
+      return true;
+    }
+
+    function safeZoneBadgeHtml(zone){
+      if(zone && zone.isHealer){
+        const amount = Number(zone.healAmount ?? DEFAULT_HEAL_AMOUNT);
+        const interval = Number(zone.healIntervalSec ?? DEFAULT_HEAL_INTERVAL_SEC);
+        return '<span class="safe-badge safe-badge-healer">❤️ HEALER<br>+' + amount + " / " + interval + "秒</span>";
+      }
+      return '<span class="safe-badge safe-badge-normal">🛡 SAFE</span>';
+    }
+
+    function renderSafeZoneList(zones){
+      safeZonesCache = zones || {};
+      const container = $("safeZoneList");
+      if(!container) return;
+
+      const entries = Object.entries(safeZonesCache).filter(([id, z]) => z && typeof z === "object");
+
+      if(entries.length === 0){
+        container.innerHTML = '<p class="safe-zone-empty">SAFEゾーンはまだありません</p>';
+        setSafeZoneStatus("SAFEゾーン: 0件");
+        return;
+      }
+
+      entries.sort((a, b) => (Number(b[1].updatedAt) || 0) - (Number(a[1].updatedAt) || 0));
+
+      container.innerHTML = entries.map(([id, zone]) => {
+        const safeId = escapeHtml(id);
+        const name = escapeHtml(zone.name || zone.label || id);
+        const activeClass = zone.active === false ? "safe-zone-inactive" : "safe-zone-active";
+        const activeLabel = zone.active === false ? "OFF" : "ACTIVE";
+        const healAmount = zone.healAmount ?? DEFAULT_HEAL_AMOUNT;
+        const healInterval = zone.healIntervalSec ?? DEFAULT_HEAL_INTERVAL_SEC;
+        const healerBtnLabel = zone.isHealer ? "❤️ ヒーラーOFF" : "❤️ ヒーラーON";
+        const activeBtnLabel = zone.active === false ? "✅ active ON" : "⏸ active OFF";
+
+        return (
+          '<div class="safe-zone-card ' + activeClass + '" data-zone-id="' + safeId + '">' +
+            '<div class="safe-zone-card-head">' +
+              '<div class="safe-zone-card-title">' + name + '</div>' +
+              safeZoneBadgeHtml(zone) +
+              '<span class="safe-active-badge">' + activeLabel + '</span>' +
+            '</div>' +
+            '<div class="safe-zone-meta">lat:' + escapeHtml(zone.lat) + " / lng:" + escapeHtml(zone.lng) + "</div>" +
+            '<label class="safe-zone-field">半径m<input type="number" data-field="radiusM" value="' + escapeHtml(zone.radiusM ?? 80) + '"></label>' +
+            '<div class="safe-zone-healer">' +
+              '<button type="button" class="safe-zone-healer-toggle" data-action="toggle-healer">' + healerBtnLabel + "</button>" +
+              '<label class="safe-zone-field safe-zone-field-small">回復量<input type="number" data-field="healAmount" value="' + escapeHtml(healAmount) + '"></label>' +
+              '<label class="safe-zone-field safe-zone-field-small">回復間隔秒<input type="number" data-field="healIntervalSec" value="' + escapeHtml(healInterval) + '"></label>' +
+              '<button type="button" class="safe-zone-healer-save" data-action="save-healer">💾 ヒーラー設定保存</button>' +
+            "</div>" +
+            '<div class="safe-zone-actions">' +
+              '<button type="button" data-action="update-location">📍 現在地で更新</button>' +
+              '<button type="button" data-action="save-radius">💾 半径保存</button>' +
+              '<button type="button" data-action="toggle-active">' + activeBtnLabel + "</button>" +
+              '<button type="button" data-action="delete" class="safe-zone-delete">🗑 削除</button>' +
+            "</div>" +
+          "</div>"
+        );
+      }).join("");
+
+      setSafeZoneStatus("SAFEゾーン: " + entries.length + "件");
+    }
+
+    function getSafeZoneCard(zoneId){
+      return document.querySelector('.safe-zone-card[data-zone-id="' + zoneId + '"]');
+    }
+
+    function readCardHealerInputs(card){
+      if(!card) return null;
+      return {
+        healAmount: card.querySelector('[data-field="healAmount"]')?.value,
+        healIntervalSec: card.querySelector('[data-field="healIntervalSec"]')?.value
+      };
+    }
+
+    function zoneDisplayName(zone){
+      return (zone && (zone.name || zone.label)) || "SAFEゾーン";
+    }
+
+    async function addSafeZoneFromForm(useCurrentLocation){
+      if(!(await ensureDbReady())){
+        setSafeZoneStatus("SAFEゾーン: Firebase未接続");
+        return;
+      }
+
+      const name = ($("safeZoneNameInput")?.value || "").trim() || "SAFEゾーン";
+      const healAmount = $("safeZoneHealAmountInput")?.value;
+      const healIntervalSec = $("safeZoneHealIntervalInput")?.value;
+      const isHealer = !!$("safeZoneHealerCheck")?.checked;
+
+      if(!validateHealerValues(healAmount, healIntervalSec)){
+        setSafeZoneStatus("ヒーラー設定を確認してください");
+        log("ヒーラー設定を確認してください");
+        return;
+      }
+
+      const buildZone = (lat, lng, accuracy) => ({
+        name,
+        label: "🛡 " + name,
+        lat: Number(lat),
+        lng: Number(lng),
+        radiusM: Number($("safeZoneRadiusInput")?.value) || 80,
+        active: true,
+        isHealer,
+        healAmount: Number(healAmount),
+        healIntervalSec: Number(healIntervalSec),
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        lastAccuracy: accuracy != null ? Number(accuracy) : null
+      });
+
+      const saveZone = async zone => {
+        if(!Number.isFinite(zone.lat) || !Number.isFinite(zone.lng) || !Number.isFinite(zone.radiusM) || zone.radiusM < 10){
+          setSafeZoneStatus("SAFEゾーン: 位置・半径を確認してください");
+          log("SAFEゾーン: 位置・半径を確認してください");
+          return;
+        }
+
+        const ref = db.ref("streetSurvival/safeZones").push();
+        await ref.set(zone);
+
+        if(isHealer){
+          addAdminLog("SAFE_ZONE", "🛡❤️ ヒーラーSAFEゾーンを追加しました：" + name);
+        }else{
+          addAdminLog("SAFE_ZONE", "🛡 SAFEゾーンを追加しました：" + name);
+        }
+
+        log("SAFEゾーン追加: " + name);
+        setSafeZoneStatus("SAFEゾーン: 追加OK");
+      };
+
+      if(useCurrentLocation){
+        if(!navigator.geolocation){
+          setSafeZoneStatus("SAFEゾーン: 現在地を取得できません");
+          log("SAFEゾーン: 現在地を取得できません");
+          return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          async pos => {
+            try{
+              await saveZone(buildZone(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy));
+            }catch(e){
+              log("SAFEゾーン追加エラー: " + e.message);
+            }
+          },
+          err => {
+            setSafeZoneStatus("SAFEゾーン: 現在地を取得できません");
+            log("SAFEゾーン: 現在地を取得できません");
+            console.warn("geolocation:", err);
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+        return;
+      }
+
+      const lat = $("safeZoneLatInput")?.value;
+      const lng = $("safeZoneLngInput")?.value;
+
+      if(lat === "" || lng === ""){
+        setSafeZoneStatus("SAFEゾーン: 緯度・経度を入力してください");
+        log("SAFEゾーン: 緯度・経度を入力してください");
+        return;
+      }
+
+      try{
+        await saveZone(buildZone(lat, lng, null));
+      }catch(e){
+        log("SAFEゾーン追加エラー: " + e.message);
+      }
+    }
+
+    async function toggleSafeZoneActive(zoneId){
+      const zone = safeZonesCache[zoneId];
+      if(!zone || !(await ensureDbReady())) return;
+
+      const nextActive = zone.active === false;
+      await db.ref("streetSurvival/safeZones/" + zoneId).update({
+        active: nextActive,
+        updatedAt: Date.now()
+      });
+
+      log("SAFEゾーン active切替: " + zoneDisplayName(zone));
+    }
+
+    async function deleteSafeZone(zoneId){
+      const zone = safeZonesCache[zoneId];
+      if(!zone || !(await ensureDbReady())) return;
+
+      const ok = confirm('SAFEゾーン「' + zoneDisplayName(zone) + '」を削除しますか？');
+      if(!ok) return;
+
+      await db.ref("streetSurvival/safeZones/" + zoneId).remove();
+      addAdminLog("SAFE_ZONE", "🗑 SAFEゾーンを削除しました：" + zoneDisplayName(zone));
+      log("SAFEゾーン削除: " + zoneDisplayName(zone));
+    }
+
+    async function updateSafeZoneLocation(zoneId){
+      const zone = safeZonesCache[zoneId];
+      if(!zone || !(await ensureDbReady())) return;
+
+      if(!navigator.geolocation){
+        log("SAFEゾーン: 現在地を取得できません");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        async pos => {
+          try{
+            await db.ref("streetSurvival/safeZones/" + zoneId).update({
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+              lastAccuracy: pos.coords.accuracy,
+              updatedAt: Date.now()
+            });
+            log("SAFEゾーン現在地更新: " + zoneDisplayName(zone));
+          }catch(e){
+            log("SAFEゾーン更新エラー: " + e.message);
+          }
+        },
+        err => {
+          log("SAFEゾーン: 現在地を取得できません");
+          console.warn("geolocation:", err);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    }
+
+    async function saveSafeZoneRadius(zoneId){
+      const zone = safeZonesCache[zoneId];
+      const card = getSafeZoneCard(zoneId);
+      if(!zone || !card || !(await ensureDbReady())) return;
+
+      const radiusM = Number(readCardRadius(card));
+      if(!Number.isFinite(radiusM) || radiusM < 10){
+        log("SAFEゾーン: 半径を確認してください");
+        return;
+      }
+
+      await db.ref("streetSurvival/safeZones/" + zoneId).update({
+        radiusM,
+        updatedAt: Date.now()
+      });
+
+      log("SAFEゾーン半径保存: " + zoneDisplayName(zone));
+    }
+
+    async function toggleSafeZoneHealer(zoneId){
+      const zone = safeZonesCache[zoneId];
+      if(!zone || !(await ensureDbReady())) return;
+
+      const nextHealer = !zone.isHealer;
+      await db.ref("streetSurvival/safeZones/" + zoneId).update({
+        isHealer: nextHealer,
+        updatedAt: Date.now()
+      });
+
+      addAdminLog("SAFE_ZONE", "❤️ ヒーラー設定を切り替えました：" + zoneDisplayName(zone));
+      log("ヒーラー切替: " + zoneDisplayName(zone) + " / " + (nextHealer ? "ON" : "OFF"));
+    }
+
+    async function saveSafeZoneHealerSettings(zoneId){
+      const zone = safeZonesCache[zoneId];
+      const card = getSafeZoneCard(zoneId);
+      const inputs = readCardHealerInputs(card);
+
+      if(!zone || !inputs || !(await ensureDbReady())) return;
+
+      if(!validateHealerValues(inputs.healAmount, inputs.healIntervalSec)){
+        setSafeZoneStatus("ヒーラー設定を確認してください");
+        log("ヒーラー設定を確認してください");
+        return;
+      }
+
+      await db.ref("streetSurvival/safeZones/" + zoneId).update({
+        healAmount: Number(inputs.healAmount),
+        healIntervalSec: Number(inputs.healIntervalSec),
+        updatedAt: Date.now()
+      });
+
+      addAdminLog("SAFE_ZONE", "❤️ ヒーラー回復設定を保存しました：" + zoneDisplayName(zone));
+      log("ヒーラー設定保存: " + zoneDisplayName(zone));
+      setSafeZoneStatus("SAFEゾーン: ヒーラー設定保存OK");
+    }
+
+    function handleSafeZoneListClick(e){
+      const btn = e.target.closest("[data-action]");
+      const card = e.target.closest(".safe-zone-card");
+      if(!btn || !card || !card.dataset.zoneId) return;
+
+      const zoneId = card.dataset.zoneId;
+      const action = btn.dataset.action;
+
+      if(action === "toggle-healer") toggleSafeZoneHealer(zoneId);
+      else if(action === "save-healer") saveSafeZoneHealerSettings(zoneId);
+      else if(action === "update-location") updateSafeZoneLocation(zoneId);
+      else if(action === "save-radius") saveSafeZoneRadius(zoneId);
+      else if(action === "toggle-active") toggleSafeZoneActive(zoneId);
+      else if(action === "delete") deleteSafeZone(zoneId);
+    }
+
+    function readCardRadius(card){
+      return card?.querySelector('[data-field="radiusM"]')?.value;
     }
 
     function firebaseErrorDetail(e, action){
@@ -1618,6 +1968,21 @@
           }
         });
 
+        db.ref("streetSurvival/safeZones").on("value", snap => {
+          try{
+            renderSafeZoneList(snap.val() || {});
+          }catch(e){
+            log("SAFEゾーン表示エラー: " + e.message);
+          }
+        }, err => {
+          const msg = (err && err.message) || err;
+          if(/permission/i.test(String(msg))){
+            log("SAFEゾーン表示エラー: Firebase Rulesで safeZones への読み込みが許可されていません");
+          }else{
+            log("SAFEゾーン表示エラー: " + msg);
+          }
+        });
+
         loadSettings();
 
       }catch(e){
@@ -2008,6 +2373,27 @@
 
       const setCurrentToShinmachiBtn = $("setCurrentToShinmachiBtn");
       if(setCurrentToShinmachiBtn) setCurrentToShinmachiBtn.addEventListener("click", setCurrentToShinmachi);
+
+      const addSafeZoneBtn = $("addSafeZoneBtn");
+      if(addSafeZoneBtn){
+        addSafeZoneBtn.addEventListener("click", () => addSafeZoneFromForm(false));
+      }else{
+        log("⚠️ addSafeZoneBtn が見つかりません");
+      }
+
+      const addSafeZoneCurrentBtn = $("addSafeZoneCurrentBtn");
+      if(addSafeZoneCurrentBtn){
+        addSafeZoneCurrentBtn.addEventListener("click", () => addSafeZoneFromForm(true));
+      }else{
+        log("⚠️ addSafeZoneCurrentBtn が見つかりません");
+      }
+
+      const safeZoneList = $("safeZoneList");
+      if(safeZoneList){
+        safeZoneList.addEventListener("click", handleSafeZoneListClick);
+      }else{
+        log("⚠️ safeZoneList が見つかりません");
+      }
 
       const playerList = $("playerList");
       if(playerList){

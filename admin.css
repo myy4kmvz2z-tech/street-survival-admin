@@ -697,3 +697,165 @@ body.bossPulse{animation: bossPulse .9s ease}
   .area-card{padding:12px}
   .area-save-btn{font-size:15px}
 }
+
+/* SAFE zone management v1.0 */
+.safe-zone-status{
+  font-size:13px;
+  color:#aaa;
+  margin:0 0 14px;
+}
+.safe-zone-add{
+  background:#05070a;
+  border:1px solid #2d3845;
+  border-radius:14px;
+  padding:14px 16px;
+  margin-bottom:14px;
+  display:grid;
+  gap:10px;
+}
+.safe-zone-add h4{
+  margin:0;
+  font-size:16px;
+  color:#77ead7;
+}
+.safe-zone-field{
+  display:block;
+  font-size:13px;
+  color:#aeb7c2;
+}
+.safe-zone-field input{margin-top:4px}
+.safe-zone-field-small input{font-size:14px;padding:10px}
+.safe-zone-check{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:14px;
+  color:#ffb4c8;
+  cursor:pointer;
+}
+.safe-zone-check input{
+  width:18px;
+  height:18px;
+  accent-color:#ff8a8a;
+}
+.safe-zone-add-actions{
+  display:grid;
+  gap:8px;
+}
+.safe-zone-add-btn{
+  width:100%;
+  padding:12px 14px;
+  border:0;
+  border-radius:12px;
+  background:#77ead7;
+  color:#111;
+  font-size:15px;
+  font-weight:900;
+  cursor:pointer;
+}
+.safe-zone-geo-btn,
+.safe-zone-actions button,
+.safe-zone-healer-toggle,
+.safe-zone-healer-save{
+  padding:10px 12px;
+  border:0;
+  border-radius:10px;
+  background:#2a3440;
+  color:#f5f1e8;
+  font-size:12px;
+  font-weight:800;
+  cursor:pointer;
+}
+.safe-zone-list{
+  display:grid;
+  gap:12px;
+  max-height:520px;
+  overflow-y:auto;
+  padding-right:4px;
+}
+.safe-zone-empty{
+  color:#aeb7c2;
+  font-size:14px;
+  margin:0;
+}
+.safe-zone-card{
+  background:#05070a;
+  border:1px solid #2d3845;
+  border-radius:14px;
+  padding:14px 16px;
+  display:grid;
+  gap:10px;
+}
+.safe-zone-card.safe-zone-inactive{opacity:.72}
+.safe-zone-card-head{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px;
+}
+.safe-zone-card-title{
+  font-size:17px;
+  font-weight:900;
+  color:#f5f1e8;
+  flex:1 1 100%;
+}
+.safe-badge{
+  display:inline-block;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:800;
+  line-height:1.3;
+  text-align:center;
+}
+.safe-badge-normal{
+  background:#12302c;
+  color:#77ead7;
+  border:1px solid #2d6b63;
+}
+.safe-badge-healer{
+  background:#3a1220;
+  color:#ffb4c8;
+  border:1px solid #8b3a52;
+}
+.safe-active-badge{
+  font-size:11px;
+  font-weight:800;
+  color:#aeb7c2;
+  padding:4px 8px;
+  border-radius:999px;
+  background:#1c2026;
+}
+.safe-zone-meta{
+  font-size:12px;
+  color:#8b949e;
+  word-break:break-all;
+}
+.safe-zone-healer{
+  display:grid;
+  gap:8px;
+  padding:10px;
+  border-radius:12px;
+  background:#1a1014;
+  border:1px solid #4a2430;
+}
+.safe-zone-healer-save{
+  background:#4a2430;
+  color:#ffb4c8;
+}
+.safe-zone-healer-toggle{
+  background:#3a1220;
+  color:#ffb4c8;
+}
+.safe-zone-actions{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:8px;
+}
+.safe-zone-delete{
+  background:#2a1212 !important;
+  color:#ff8a8a !important;
+}
+@media(max-width:560px){
+  .safe-zone-actions{grid-template-columns:1fr}
+}
