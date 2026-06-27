@@ -314,6 +314,10 @@
       return "role-unknown";
     }
 
+    function onlineBadgeClass(online){
+      return online === true ? "online-on" : "online-off";
+    }
+
     function getHunterMinutes(){
       return Number($("hunterMinutesInput")?.value) || 10;
     }
@@ -348,22 +352,27 @@
         const role = roleOf(p);
         const hp = Number(p.hp ?? 0);
         const points = Number(p.points ?? 0);
-        const onlineText = p.online === true ? "ONLINE" : "OFFLINE";
+        const online = p.online === true;
+        const onlineText = online ? "ONLINE" : "OFFLINE";
         const ago = formatTimeAgo(p.updatedAt);
         const safeId = escapeHtml(id);
         const safeName = escapeHtml(nickname);
+        const statusText = ago ? escapeHtml(ago) : "不明";
 
         return (
           '<div class="player-card" data-player-id="' + safeId + '">' +
             '<div class="player-card-name">' + safeName + '</div>' +
-            '<div class="player-card-meta">' +
-              '<span class="' + roleClass(role) + '">' + roleDisplay(role) + '</span>' +
-              ' / HP:' + hp + ' / POINT:' + points + ' / ' + onlineText +
+            '<div class="player-card-badges">' +
+              '<span class="player-badge ' + roleClass(role) + '">' + roleDisplay(role) + '</span>' +
             '</div>' +
-            (ago ? '<div class="player-card-time">' + escapeHtml(ago) + '</div>' : '') +
+            '<div class="player-card-stats">HP:' + hp + ' / POINT:' + points + '</div>' +
+            '<div class="player-card-status">' +
+              '最終更新: ' + statusText + ' / ' +
+              '<span class="player-badge ' + onlineBadgeClass(online) + '">' + onlineText + '</span>' +
+            '</div>' +
             '<div class="player-card-actions">' +
-              '<button type="button" class="player-btn-runner" data-action="runner" data-id="' + safeId + '" data-name="' + safeName + '">🔵 RUNNERにする</button>' +
-              '<button type="button" class="player-btn-hunter" data-action="hunter" data-id="' + safeId + '" data-name="' + safeName + '">🟢 HUNTERにする</button>' +
+              '<button type="button" class="player-btn-runner" data-action="runner" data-id="' + safeId + '" data-name="' + safeName + '">🔵 RUNNER</button>' +
+              '<button type="button" class="player-btn-hunter" data-action="hunter" data-id="' + safeId + '" data-name="' + safeName + '">🟢 HUNTER</button>' +
               '<button type="button" class="player-btn-heal" data-action="heal" data-id="' + safeId + '" data-name="' + safeName + '">❤️ HP回復</button>' +
               '<button type="button" class="player-btn-delete" data-action="delete" data-id="' + safeId + '" data-name="' + safeName + '">🗑 削除</button>' +
             '</div>' +
