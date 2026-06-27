@@ -3,15 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>STREET SURVIVAL ADMIN v54</title>
+  <title>STREET SURVIVAL ADMIN v1.0</title>
   <link rel="stylesheet" href="admin.css?v=42">
 </head>
 
 <body>
   <header class="top">
     <div>
-      <h1>STREET SURVIVAL ADMIN v54</h1>
-      <p>Firebase Direct Control / 本番前安定版</p>
+      <h1>STREET SURVIVAL ADMIN v1.0</h1>
+      <p>Firebase Direct Control / 本番運営版</p>
     </div>
     <div id="firebaseStatus" class="status status-wait">🔥 Firebase: 起動前</div>
   </header>
@@ -41,7 +41,7 @@
     </section>
 
     <section class="panel">
-      <h3>🌆 街ステータス v54</h3>
+      <h3>🌆 街ステータス v1.0</h3>
       <div class="stats">
         <div><span>👥 参加者</span><b id="playerCount">0</b></div>
         <div><span>🟢 HUNTER</span><b id="hunterCount">0</b></div>
@@ -53,7 +53,26 @@
     </section>
 
     <section class="panel">
-      <h3>🛠 ADMIN CONTROL v54</h3>
+      <h3>⚙ イベント設定 v1.0</h3>
+      <div style="display:grid;gap:10px;">
+        <label style="display:block;font-size:14px;color:#aeb7c2;">イベント名<input id="eventNameInput" value="STREET SURVIVAL"></label>
+        <label style="display:block;font-size:14px;color:#aeb7c2;">HUNTER時間（分）<input id="hunterMinutesInput" type="number" value="10"></label>
+        <label style="display:block;font-size:14px;color:#aeb7c2;">テストHUNTER秒数<input id="testHunterSecondsInput" type="number" value="30"></label>
+        <label style="display:block;font-size:14px;color:#aeb7c2;">初期HP<input id="initialHpInput" type="number" value="100"></label>
+        <label style="display:block;font-size:14px;color:#aeb7c2;">最大HP<input id="maxHpInput" type="number" value="300"></label>
+        <label style="display:block;font-size:14px;color:#aeb7c2;">吸収距離（m）<input id="battleRangeInput" type="number" value="7"></label>
+        <label style="display:block;font-size:14px;color:#aeb7c2;">警告距離（m）<input id="warningRangeInput" type="number" value="15"></label>
+        <label style="display:block;font-size:14px;color:#aeb7c2;">SAFEエリア名<input id="safeNameInput" value="お宿 Onn"></label>
+        <label style="display:block;font-size:14px;color:#aeb7c2;">BOSSメッセージ<input id="bossMessageInput" value="👹 BOSS出現！"></label>
+        <label style="display:block;font-size:14px;color:#aeb7c2;">MISSIONメッセージ<input id="missionMessageInput" value="🎯 MISSION発生！"></label>
+        <label style="display:block;font-size:14px;color:#aeb7c2;">LIVEメッセージ<input id="liveMessageInput" value="🎵 LIVE開始！"></label>
+      </div>
+      <button id="saveSettingsBtn" class="send">💾 設定を保存</button>
+      <p id="settingsStatus" style="font-size:13px;color:#aaa;margin-bottom:0;">設定: 未読込</p>
+    </section>
+
+    <section class="panel">
+      <h3>🛠 ADMIN CONTROL v1.0</h3>
       <div style="display:grid;gap:10px;">
         <button id="testHunterBtn" style="padding:12px;font-size:16px;">⏱ テスト30秒HUNTER</button>
         <button id="randomHunterBtn" style="padding:12px;font-size:16px;">🎲 ランダム3人HUNTER / 10分</button>
@@ -63,7 +82,7 @@
         <button id="cleanupBtn" style="padding:12px;font-size:16px;">🧹 古い参加者削除</button>
         <button id="forceDeleteBtn" style="padding:12px;font-size:16px;background:#5b1111;color:#fff;">⚠️ 全参加者を強制削除</button>
       </div>
-      <p id="adminStatus" style="font-size:13px;color:#aaa;margin-bottom:0;">v54: 待機中</p>
+      <p id="adminStatus" style="font-size:13px;color:#aaa;margin-bottom:0;">v1.0: 待機中</p>
     </section>
 
     <section class="panel">
@@ -99,6 +118,88 @@
     function setAdminStatus(text){
       const el = $("adminStatus");
       if(el) el.textContent = text;
+    }
+
+    function setSettingsStatus(text){
+      const el = $("settingsStatus");
+      if(el) el.textContent = text;
+    }
+
+    function applySettingsToForm(s){
+      if(!s) return;
+      $("eventNameInput").value = s.eventName ?? "STREET SURVIVAL";
+      $("hunterMinutesInput").value = s.hunterMinutes ?? 10;
+      $("testHunterSecondsInput").value = s.testHunterSeconds ?? 30;
+      $("initialHpInput").value = s.initialHp ?? 100;
+      $("maxHpInput").value = s.maxHp ?? 300;
+      $("battleRangeInput").value = s.battleRange ?? 7;
+      $("warningRangeInput").value = s.warningRange ?? 15;
+      $("safeNameInput").value = s.safeName ?? "お宿 Onn";
+      $("bossMessageInput").value = s.bossMessage ?? "👹 BOSS出現！";
+      $("missionMessageInput").value = s.missionMessage ?? "🎯 MISSION発生！";
+      $("liveMessageInput").value = s.liveMessage ?? "🎵 LIVE開始！";
+    }
+
+    function collectSettingsFromForm(){
+      return {
+        eventName: $("eventNameInput").value.trim() || "STREET SURVIVAL",
+        hunterMinutes: Number($("hunterMinutesInput").value) || 10,
+        testHunterSeconds: Number($("testHunterSecondsInput").value) || 30,
+        initialHp: Number($("initialHpInput").value) || 100,
+        maxHp: Number($("maxHpInput").value) || 300,
+        battleRange: Number($("battleRangeInput").value) || 7,
+        warningRange: Number($("warningRangeInput").value) || 15,
+        safeName: $("safeNameInput").value.trim() || "お宿 Onn",
+        bossMessage: $("bossMessageInput").value.trim() || "👹 BOSS出現！",
+        missionMessage: $("missionMessageInput").value.trim() || "🎯 MISSION発生！",
+        liveMessage: $("liveMessageInput").value.trim() || "🎵 LIVE開始！",
+        updatedAt: new Date().toISOString()
+      };
+    }
+
+    async function loadSettings(){
+      if(!db) return;
+
+      try{
+        const snap = await db.ref("streetSurvival/settings").get();
+        const settings = snap.val();
+
+        if(settings){
+          applySettingsToForm(settings);
+          setSettingsStatus("設定: 読込OK");
+          log("イベント設定を読み込みました");
+        }else{
+          setSettingsStatus("設定: 初期値を使用");
+          log("イベント設定なし（初期値を使用）");
+        }
+      }catch(e){
+        setSettingsStatus("設定: 読込エラー");
+        log("設定読込エラー: " + e.message);
+      }
+    }
+
+    async function saveSettings(){
+      try{
+        if(!db){
+          initFirebase();
+          await new Promise(resolve => setTimeout(resolve, 800));
+        }
+
+        if(!db){
+          log("設定保存失敗: Firebase未接続");
+          return;
+        }
+
+        const settings = collectSettingsFromForm();
+        await db.ref("streetSurvival/settings").set(settings);
+
+        setSettingsStatus("設定: 保存OK (" + new Date().toLocaleTimeString() + ")");
+        showToast("設定を保存しました");
+        log("イベント設定を保存しました");
+      }catch(e){
+        setSettingsStatus("設定: 保存エラー");
+        log("設定保存エラー: " + e.message);
+      }
     }
 
     function setText(id, text){
@@ -140,7 +241,7 @@
     function initFirebase(){
       try{
         setStatus("🔥 Firebase: 接続準備中", "status-wait");
-        log("v54 Firebase接続開始");
+        log("v1.0 Firebase接続開始");
 
         if(!window.STREET_SURVIVAL_FIREBASE_CONFIG){
           setStatus("🔥 Firebase: 設定なし", "status-error");
@@ -161,8 +262,8 @@
         db = firebase.database();
 
         setStatus("🔥 Firebase: 接続OK", "status-ok");
-        setAdminStatus("v54: Firebase接続OK");
-        log("v54 Firebase接続OK");
+        setAdminStatus("v1.0: Firebase接続OK");
+        log("v1.0 Firebase接続OK");
 
         db.ref("streetSurvival/players").on("value", snap => {
           const players = snap.val() || {};
@@ -173,6 +274,8 @@
           const runners = values.filter(p => roleOf(p) === "RUNNER").length;
           log("参加者更新: " + values.length + "人 / RUNNER " + runners + " / HUNTER " + hunters);
         });
+
+        loadSettings();
 
       }catch(e){
         console.error(e);
@@ -198,7 +301,7 @@
         type,
         message: message || "",
         at: new Date().toISOString(),
-        from: "admin-v54"
+        from: "admin-v1.0"
       };
 
       await db.ref("streetSurvival/currentCommand").set(cmd);
@@ -261,13 +364,15 @@
     }
 
     async function testHunter30(){
-      log("⏱ テスト30秒HUNTERボタン押しました");
-      await setRandomHunters(30 * 1000, "⏱ テスト30秒HUNTER");
+      const seconds = Number($("testHunterSecondsInput")?.value) || 30;
+      log("⏱ テスト" + seconds + "秒HUNTERボタン押しました");
+      await setRandomHunters(seconds * 1000, "⏱ テスト" + seconds + "秒HUNTER");
     }
 
     async function randomHunter10min(){
-      log("🎲 ランダム3人HUNTERボタン押しました");
-      await setRandomHunters(10 * 60 * 1000, "🎲 ランダム3人HUNTER");
+      const minutes = Number($("hunterMinutesInput")?.value) || 10;
+      log("🎲 ランダム3人HUNTER / " + minutes + "分ボタン押しました");
+      await setRandomHunters(minutes * 60 * 1000, "🎲 ランダム3人HUNTER");
     }
 
     async function allRunner(){
@@ -418,9 +523,22 @@
     }
 
     window.addEventListener("load", () => {
-      log("v54 script 起動");
+      log("v1.0 script 起動");
       initFirebase();
 
+      document.querySelectorAll("[data-type]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const type = btn.dataset.type;
+          const message = btn.dataset.radio || type;
+          sendCommand(type, message);
+        });
+      });
+
+      $("radioSend").addEventListener("click", () => {
+        sendCommand("RADIO", $("radioInput")?.value || "運営速報");
+      });
+
+      $("saveSettingsBtn").addEventListener("click", saveSettings);
       $("testHunterBtn").addEventListener("click", testHunter30);
       $("randomHunterBtn").addEventListener("click", randomHunter10min);
       $("allRunnerBtn").addEventListener("click", allRunner);
@@ -429,7 +547,7 @@
       $("cleanupBtn").addEventListener("click", cleanupPlayers);
       $("forceDeleteBtn").addEventListener("click", forceDeletePlayers);
 
-      log("v54 ボタン接続OK");
+      log("v1.0 ボタン接続OK");
     });
   </script>
 </body>
