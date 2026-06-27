@@ -3,22 +3,45 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>STREET SURVIVAL ADMIN v53</title>
+  <title>STREET SURVIVAL ADMIN v54</title>
   <link rel="stylesheet" href="admin.css?v=42">
 </head>
 
 <body>
   <header class="top">
     <div>
-      <h1>STREET SURVIVAL ADMIN v53</h1>
-      <p>Firebase Direct Control / 30秒HUNTERテスト版</p>
+      <h1>STREET SURVIVAL ADMIN v54</h1>
+      <p>Firebase Direct Control / 本番前安定版</p>
     </div>
     <div id="firebaseStatus" class="status status-wait">🔥 Firebase: 起動前</div>
   </header>
 
+  <div id="toast" class="toast hidden">送信成功</div>
+
   <main class="wrap">
+
     <section class="panel">
-      <h3>🌆 街ステータス</h3>
+      <h3>🗂 イベント発令</h3>
+      <div class="grid">
+        <button class="normal" data-type="NORMAL" data-radio="🌆 通常モードです。">🌆<b>NORMAL</b><small>通常</small></button>
+        <button class="alert" data-type="ALERT" data-radio="⚠️ 警戒モード発令！街に注意してください。">⚠️<b>ALERT</b><small>警戒</small></button>
+        <button class="boss" data-type="BOSS" data-radio="👹 新町にBOSS出現！討伐チャンス！">👹<b>BOSS</b><small>新町出現</small></button>
+        <button class="mission" data-type="MISSION" data-radio="🎯 本町集合ミッション開始！">🎯<b>MISSION</b><small>本町集合</small></button>
+        <button class="live" data-type="LIVE" data-radio="🎵 オルタネーターズLIVE開始！お宿 Onn前へ！">🎵<b>LIVE</b><small>オルタ開始</small></button>
+        <button class="safe" data-type="SAFE" data-radio="🛡 お宿 Onn SAFE ZONE発動！HP回復できます！">🛡<b>SAFE</b><small>Onn安全</small></button>
+        <button class="final" data-type="FINAL" data-radio="🔥 FINAL BATTLE開始！HP吸収2倍！POINT2倍！">🔥<b>FINAL</b><small>終盤戦</small></button>
+        <button class="end" data-type="END" data-radio="🏆 GAME END！お宿 Onn前へ集合！">🏆<b>END</b><small>終了</small></button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h3>📡 RADIO送信</h3>
+      <input id="radioInput" value="本町で戦闘発生！">
+      <button id="radioSend" class="send">📻 RADIOを送信</button>
+    </section>
+
+    <section class="panel">
+      <h3>🌆 街ステータス v54</h3>
       <div class="stats">
         <div><span>👥 参加者</span><b id="playerCount">0</b></div>
         <div><span>🟢 HUNTER</span><b id="hunterCount">0</b></div>
@@ -30,19 +53,23 @@
     </section>
 
     <section class="panel">
-      <h3>🛠 ADMIN CONTROL v53</h3>
+      <h3>🛠 ADMIN CONTROL v54</h3>
       <div style="display:grid;gap:10px;">
-        <button id="adminTestHuntersBtn" style="padding:12px;font-size:16px;">⏱ テスト30秒HUNTER</button>
-        <button id="adminAllRunnerBtn" style="padding:12px;font-size:16px;">🔵 全員RUNNERに戻す</button>
-        <button id="adminCleanupPlayersBtn" style="padding:12px;font-size:16px;">🧹 古い参加者削除</button>
+        <button id="testHunterBtn" style="padding:12px;font-size:16px;">⏱ テスト30秒HUNTER</button>
+        <button id="randomHunterBtn" style="padding:12px;font-size:16px;">🎲 ランダム3人HUNTER / 10分</button>
+        <button id="allRunnerBtn" style="padding:12px;font-size:16px;">🔵 全員RUNNERに戻す</button>
+        <button id="healAllBtn" style="padding:12px;font-size:16px;">❤️ 全員HP回復</button>
+        <button id="resetAllBtn" style="padding:12px;font-size:16px;">🔄 全員リセット</button>
+        <button id="cleanupBtn" style="padding:12px;font-size:16px;">🧹 古い参加者削除</button>
       </div>
-      <p id="adminV39Status" style="font-size:13px;color:#aaa;margin-bottom:0;">v53: 待機中</p>
+      <p id="adminStatus" style="font-size:13px;color:#aaa;margin-bottom:0;">v54: 待機中</p>
     </section>
 
     <section class="panel">
       <h3>📋 運営ログ</h3>
       <pre id="log"></pre>
     </section>
+
   </main>
 
   <script src="firebase-config.js?v=42"></script>
@@ -50,93 +77,110 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <script>
-  let db = null;
+    let db = null;
 
-  function log(msg){
-    const el = document.getElementById("log");
-    const t = new Date().toLocaleTimeString();
-    if(el) el.textContent = "[" + t + "] " + msg + "\n" + el.textContent;
-    console.log(msg);
-  }
+    const $ = id => document.getElementById(id);
 
-  function setStatus(text, cls){
-    const el = document.getElementById("firebaseStatus");
-    if(!el) return;
-    el.textContent = text;
-    el.className = "status " + (cls || "status-wait");
-  }
-
-  function setText(id, text){
-    const el = document.getElementById(id);
-    if(el) el.textContent = text;
-  }
-
-  function roleOf(p){
-    return String((p && p.role) || "RUNNER").toUpperCase();
-  }
-
-  function updateStats(players){
-    const list = players || {};
-    const values = Object.values(list);
-
-    const total = values.length;
-    const hunters = values.filter(p => roleOf(p) === "HUNTER").length;
-    const runners = values.filter(p => roleOf(p) === "RUNNER").length;
-    const bosses = values.filter(p => roleOf(p) === "BOSS").length;
-    const missions = values.filter(p => p && (p.mission === true || String(p.status || "").toUpperCase() === "MISSION")).length;
-    const safes = values.filter(p => p && (String(p.area || "").toUpperCase() === "SAFE" || String(p.status || "").toUpperCase() === "SAFE")).length;
-
-    setText("playerCount", total);
-    setText("hunterCount", hunters);
-    setText("runnerCount", runners);
-    setText("bossCount", bosses);
-    setText("missionCount", missions);
-    setText("safeCount", safes);
-
-    log("参加者更新: " + total + "人 / RUNNER " + runners + " / HUNTER " + hunters);
-  }
-
-  function initFirebase(){
-    try{
-      setStatus("🔥 Firebase: 接続準備中", "status-wait");
-      log("v53 Firebase接続開始");
-
-      if(!window.STREET_SURVIVAL_FIREBASE_CONFIG){
-        setStatus("🔥 Firebase: 設定なし", "status-error");
-        log("Firebase設定なし");
-        return;
-      }
-
-      if(!window.firebase){
-        setStatus("🔥 Firebase: 本体未読込", "status-error");
-        log("Firebase本体未読込");
-        return;
-      }
-
-      if(!firebase.apps.length){
-        firebase.initializeApp(window.STREET_SURVIVAL_FIREBASE_CONFIG);
-      }
-
-      db = firebase.database();
-
-      setStatus("🔥 Firebase: 接続OK", "status-ok");
-      log("v53 Firebase接続OK");
-
-      db.ref("streetSurvival/players").on("value", snap => {
-        updateStats(snap.val() || {});
-      });
-
-    }catch(e){
-      console.error(e);
-      setStatus("🔥 Firebase: エラー", "status-error");
-      log("Firebaseエラー: " + e.message);
+    function log(msg){
+      const el = $("log");
+      const t = new Date().toLocaleTimeString();
+      if(el) el.textContent = "[" + t + "] " + msg + "\n" + el.textContent;
+      console.log(msg);
     }
-  }
 
-  async function testHunters30(){
-    try{
-      log("⏱ テスト30秒HUNTERボタン押しました");
+    function setStatus(text, cls){
+      const el = $("firebaseStatus");
+      if(!el) return;
+      el.textContent = text;
+      el.className = "status " + (cls || "status-wait");
+    }
 
+    function setAdminStatus(text){
+      const el = $("adminStatus");
+      if(el) el.textContent = text;
+    }
+
+    function setText(id, text){
+      const el = $(id);
+      if(el) el.textContent = text;
+    }
+
+    function showToast(msg){
+      const el = $("toast");
+      if(!el) return;
+      el.textContent = msg;
+      el.classList.remove("hidden");
+      setTimeout(() => el.classList.add("hidden"), 1500);
+    }
+
+    function roleOf(p){
+      return String((p && p.role) || "RUNNER").toUpperCase();
+    }
+
+    function updateStats(players){
+      const list = players || {};
+      const values = Object.values(list);
+
+      const total = values.length;
+      const hunters = values.filter(p => roleOf(p) === "HUNTER").length;
+      const runners = values.filter(p => roleOf(p) === "RUNNER").length;
+      const bosses = values.filter(p => roleOf(p) === "BOSS").length;
+      const missions = values.filter(p => p && (p.mission === true || String(p.status || "").toUpperCase() === "MISSION")).length;
+      const safes = values.filter(p => p && (String(p.area || "").toUpperCase() === "SAFE" || String(p.status || "").toUpperCase() === "SAFE")).length;
+
+      setText("playerCount", total);
+      setText("hunterCount", hunters);
+      setText("runnerCount", runners);
+      setText("bossCount", bosses);
+      setText("missionCount", missions);
+      setText("safeCount", safes);
+    }
+
+    function initFirebase(){
+      try{
+        setStatus("🔥 Firebase: 接続準備中", "status-wait");
+        log("v54 Firebase接続開始");
+
+        if(!window.STREET_SURVIVAL_FIREBASE_CONFIG){
+          setStatus("🔥 Firebase: 設定なし", "status-error");
+          log("Firebase設定なし");
+          return;
+        }
+
+        if(!window.firebase){
+          setStatus("🔥 Firebase: 本体未読込", "status-error");
+          log("Firebase本体未読込");
+          return;
+        }
+
+        if(!firebase.apps.length){
+          firebase.initializeApp(window.STREET_SURVIVAL_FIREBASE_CONFIG);
+        }
+
+        db = firebase.database();
+
+        setStatus("🔥 Firebase: 接続OK", "status-ok");
+        setAdminStatus("v54: Firebase接続OK");
+        log("v54 Firebase接続OK");
+
+        db.ref("streetSurvival/players").on("value", snap => {
+          const players = snap.val() || {};
+          updateStats(players);
+
+          const values = Object.values(players);
+          const hunters = values.filter(p => roleOf(p) === "HUNTER").length;
+          const runners = values.filter(p => roleOf(p) === "RUNNER").length;
+          log("参加者更新: " + values.length + "人 / RUNNER " + runners + " / HUNTER " + hunters);
+        });
+
+      }catch(e){
+        console.error(e);
+        setStatus("🔥 Firebase: エラー", "status-error");
+        log("Firebaseエラー: " + e.message);
+      }
+    }
+
+    async function sendCommand(type, message){
       if(!db){
         log("Firebase未接続。再接続します");
         initFirebase();
@@ -144,123 +188,218 @@
       }
 
       if(!db){
-        log("テストHUNTER失敗: Firebase未接続");
+        log("送信失敗: Firebase未接続");
         return;
       }
 
-      const snap = await db.ref("streetSurvival/players").get();
-      const players = snap.val() || {};
-      const entries = Object.entries(players).filter(([key, p]) => p);
-
-      if(entries.length === 0){
-        log("テストHUNTER失敗: 参加者0人");
-        return;
-      }
-
-      const shuffled = entries.sort(() => Math.random() - 0.5);
-      const hunterCount = Math.min(3, shuffled.length);
-      const hunterKeys = new Set(shuffled.slice(0, hunterCount).map(([key]) => key));
-
-      const updates = {};
-      const now = Date.now();
-
-      entries.forEach(([key, p]) => {
-        const isHunter = hunterKeys.has(key);
-        updates[key + "/role"] = isHunter ? "HUNTER" : "RUNNER";
-        updates[key + "/hunterEndsAt"] = isHunter ? now + 30 * 1000 : null;
-        updates[key + "/lastAdminAction"] = "TEST_30SEC_HUNTERS";
-        updates[key + "/lastSeen"] = now;
-      });
-
-      await db.ref("streetSurvival/players").update(updates);
-
-      await db.ref("streetSurvival/currentCommand").set({
-        id: "test_hunter_" + Date.now(),
-        type: "RADIO",
-        message: "⏱ テスト30秒HUNTER発生！" + hunterCount + "人がHUNTERになりました！",
+      const cmd = {
+        id: type.toLowerCase() + "_" + Date.now(),
+        type,
+        message: message || "",
         at: new Date().toISOString(),
-        from: "admin-v53"
-      });
+        from: "admin-v54"
+      };
 
-      log("テスト30秒HUNTER OK: " + hunterCount + "人");
-    }catch(e){
-      console.error(e);
-      log("テストHUNTERエラー: " + e.message);
+      await db.ref("streetSurvival/currentCommand").set(cmd);
+      await db.ref("streetSurvival/commandLog").push(cmd);
+
+      showToast("送信成功: " + type);
+      log("Firebase送信OK: " + type + (message ? " / " + message : ""));
     }
-  }
 
-  async function allRunner(){
-    try{
-      if(!db){
-        initFirebase();
-        await new Promise(resolve => setTimeout(resolve, 800));
-      }
-
-      const snap = await db.ref("streetSurvival/players").get();
-      const players = snap.val() || {};
-      const updates = {};
-      const now = Date.now();
-
-      Object.entries(players).forEach(([key, p]) => {
-        if(!p) return;
-        updates[key + "/role"] = "RUNNER";
-        updates[key + "/hunterEndsAt"] = null;
-        updates[key + "/lastAdminAction"] = "ALL_RUNNER";
-        updates[key + "/lastSeen"] = now;
-      });
-
-      await db.ref("streetSurvival/players").update(updates);
-      log("全員RUNNER OK");
-    }catch(e){
-      log("全員RUNNERエラー: " + e.message);
-    }
-  }
-
-  async function cleanupPlayers(){
-    try{
-      if(!db){
-        initFirebase();
-        await new Promise(resolve => setTimeout(resolve, 800));
-      }
-
-      const snap = await db.ref("streetSurvival/players").get();
-      const players = snap.val() || {};
-      const updates = {};
-      const now = Date.now();
-      let count = 0;
-
-      Object.entries(players).forEach(([key, p]) => {
-        if(!p) return;
-        const lastSeen = Number(p.lastSeen || 0);
-        if(!lastSeen || now - lastSeen > 1000 * 60 * 3){
-          updates[key] = null;
-          count++;
+    async function setRandomHunters(durationMs, label){
+      try{
+        if(!db){
+          initFirebase();
+          await new Promise(resolve => setTimeout(resolve, 800));
         }
-      });
 
-      await db.ref("streetSurvival/players").update(updates);
-      log("古い参加者削除OK: " + count + "件");
-    }catch(e){
-      log("削除エラー: " + e.message);
+        if(!db){
+          log(label + "失敗: Firebase未接続");
+          return;
+        }
+
+        const snap = await db.ref("streetSurvival/players").get();
+        const players = snap.val() || {};
+        const entries = Object.entries(players).filter(([key, p]) => p);
+
+        if(entries.length === 0){
+          log(label + "失敗: 参加者0人");
+          return;
+        }
+
+        const shuffled = entries.sort(() => Math.random() - 0.5);
+        const hunterCount = Math.min(3, shuffled.length);
+        const hunterKeys = new Set(shuffled.slice(0, hunterCount).map(([key]) => key));
+
+        const updates = {};
+        const now = Date.now();
+
+        entries.forEach(([key, p]) => {
+          const isHunter = hunterKeys.has(key);
+          updates[key + "/role"] = isHunter ? "HUNTER" : "RUNNER";
+          updates[key + "/hunterEndsAt"] = isHunter ? now + durationMs : null;
+          updates[key + "/lastAdminAction"] = label;
+          updates[key + "/lastSeen"] = now;
+        });
+
+        await db.ref("streetSurvival/players").update(updates);
+
+        await sendCommand(
+          "RADIO",
+          label + "発生！" + hunterCount + "人がHUNTERになりました！"
+        );
+
+        log(label + " OK: " + hunterCount + "人");
+        setAdminStatus(label + " OK: " + hunterCount + "人");
+
+      }catch(e){
+        console.error(e);
+        log(label + " エラー: " + e.message);
+      }
     }
-  }
 
-  window.addEventListener("load", function(){
-    log("v53 script 起動");
-    initFirebase();
+    async function testHunter30(){
+      log("⏱ テスト30秒HUNTERボタン押しました");
+      await setRandomHunters(30 * 1000, "⏱ テスト30秒HUNTER");
+    }
 
-    const testBtn = document.getElementById("adminTestHuntersBtn");
-    const runnerBtn = document.getElementById("adminAllRunnerBtn");
-    const cleanupBtn = document.getElementById("adminCleanupPlayersBtn");
+    async function randomHunter10min(){
+      log("🎲 ランダム3人HUNTERボタン押しました");
+      await setRandomHunters(10 * 60 * 1000, "🎲 ランダム3人HUNTER");
+    }
 
-    if(testBtn) testBtn.addEventListener("click", testHunters30);
-    if(runnerBtn) runnerBtn.addEventListener("click", allRunner);
-    if(cleanupBtn) cleanupBtn.addEventListener("click", cleanupPlayers);
+    async function allRunner(){
+      try{
+        if(!db){
+          initFirebase();
+          await new Promise(resolve => setTimeout(resolve, 800));
+        }
 
-    log("v53 ボタン接続OK");
-  });
+        const snap = await db.ref("streetSurvival/players").get();
+        const players = snap.val() || {};
+        const updates = {};
+        const now = Date.now();
+
+        Object.entries(players).forEach(([key, p]) => {
+          if(!p) return;
+          updates[key + "/role"] = "RUNNER";
+          updates[key + "/hunterEndsAt"] = null;
+          updates[key + "/lastAdminAction"] = "ALL_RUNNER";
+          updates[key + "/lastSeen"] = now;
+        });
+
+        await db.ref("streetSurvival/players").update(updates);
+        await sendCommand("RADIO", "🔵 全員RUNNERに戻しました");
+
+        log("全員RUNNER OK");
+      }catch(e){
+        log("全員RUNNERエラー: " + e.message);
+      }
+    }
+
+    async function healAll(){
+      try{
+        if(!db){
+          initFirebase();
+          await new Promise(resolve => setTimeout(resolve, 800));
+        }
+
+        const snap = await db.ref("streetSurvival/players").get();
+        const players = snap.val() || {};
+        const updates = {};
+        const now = Date.now();
+
+        Object.entries(players).forEach(([key, p]) => {
+          if(!p) return;
+          updates[key + "/hp"] = 300;
+          updates[key + "/lastAdminAction"] = "HEAL_ALL";
+          updates[key + "/lastSeen"] = now;
+        });
+
+        await db.ref("streetSurvival/players").update(updates);
+        await sendCommand("RADIO", "❤️ 全員HP回復しました");
+
+        log("全員HP回復 OK");
+      }catch(e){
+        log("HP回復エラー: " + e.message);
+      }
+    }
+
+    async function resetAll(){
+      try{
+        if(!db){
+          initFirebase();
+          await new Promise(resolve => setTimeout(resolve, 800));
+        }
+
+        const snap = await db.ref("streetSurvival/players").get();
+        const players = snap.val() || {};
+        const updates = {};
+        const now = Date.now();
+
+        Object.entries(players).forEach(([key, p]) => {
+          if(!p) return;
+          updates[key + "/hp"] = 100;
+          updates[key + "/points"] = 0;
+          updates[key + "/role"] = "RUNNER";
+          updates[key + "/hunterEndsAt"] = null;
+          updates[key + "/lastAdminAction"] = "RESET_ALL";
+          updates[key + "/lastSeen"] = now;
+        });
+
+        await db.ref("streetSurvival/players").update(updates);
+        await sendCommand("RADIO", "🔄 全員リセットしました");
+
+        log("全員リセット OK");
+      }catch(e){
+        log("全員リセットエラー: " + e.message);
+      }
+    }
+
+    async function cleanupPlayers(){
+      try{
+        if(!db){
+          initFirebase();
+          await new Promise(resolve => setTimeout(resolve, 800));
+        }
+
+        const snap = await db.ref("streetSurvival/players").get();
+        const players = snap.val() || {};
+        const updates = {};
+        const now = Date.now();
+        let count = 0;
+
+        Object.entries(players).forEach(([key, p]) => {
+          if(!p) return;
+          const lastSeen = Number(p.lastSeen || 0);
+
+          if(!lastSeen || now - lastSeen > 1000 * 60 * 3){
+            updates[key] = null;
+            count++;
+          }
+        });
+
+        await db.ref("streetSurvival/players").update(updates);
+        log("古い参加者削除OK: " + count + "件");
+      }catch(e){
+        log("削除エラー: " + e.message);
+      }
+    }
+
+    window.addEventListener("load", () => {
+      log("v54 script 起動");
+      initFirebase();
+
+      $("testHunterBtn").addEventListener("click", testHunter30);
+      $("randomHunterBtn").addEventListener("click", randomHunter10min);
+      $("allRunnerBtn").addEventListener("click", allRunner);
+      $("healAllBtn").addEventListener("click", healAll);
+      $("resetAllBtn").addEventListener("click", resetAll);
+      $("cleanupBtn").addEventListener("click", cleanupPlayers);
+
+      log("v54 ボタン接続OK");
+    });
   </script>
 </body>
 </html>
-
-
