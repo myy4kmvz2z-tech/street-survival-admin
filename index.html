@@ -110,7 +110,7 @@
         <button type="button" id="qrCopyAdminUrlBtn" class="qr-url-btn">運営URLコピー</button>
       </div>
 
-      <button type="button" id="openQrModalBtn" class="qr-open-modal-btn">🔍 QRを大きく表示</button>
+      <button type="button" id="showQrModalBtn" class="qr-open-modal-btn">🔍 QRを大きく表示</button>
     </section>
 
     <section class="panel">
@@ -180,13 +180,20 @@
 
   </main>
 
-  <div id="qrModal" class="qr-modal hidden">
-    <div class="qr-modal-card">
-      <h2 class="qr-modal-title">STREET SURVIVAL</h2>
-      <p class="qr-modal-subtitle">参加者用QRコード</p>
-      <div id="playerQrCodeLarge" class="qr-code-box qr-code-box-large"></div>
-      <input class="qr-url-input qr-modal-url" id="qrModalUrlInput" readonly value="https://myy4kmvz2z-tech.github.io/street-survival-beta/index.html?v=56">
-      <button type="button" id="closeQrModalBtn" class="qr-close-modal-btn">QRを閉じる</button>
+  <div id="qrModal" class="qr-modal" style="display:none;">
+    <div class="qr-modal-content">
+      <div class="qr-modal-title">STREET SURVIVAL</div>
+      <div class="qr-modal-subtitle">参加者用QRコード</div>
+
+      <div class="qr-modal-box">
+        <div id="playerQrCodeLarge"></div>
+      </div>
+
+      <div class="qr-modal-url">
+        https://myy4kmvz2z-tech.github.io/street-survival-beta/index.html?v=56
+      </div>
+
+      <button type="button" id="closeQrModalBtn" class="qr-close-btn">閉じる</button>
     </div>
   </div>
 
@@ -1022,22 +1029,46 @@
       log("コピーできませんでした。URLを長押ししてコピーしてください。");
     }
 
-    function openQrModal(){
-      renderPlayerQrCode("playerQrCodeLarge", 320);
+    function showQrModal(){
+      const modal = document.getElementById("qrModal");
+      const largeQr = document.getElementById("playerQrCodeLarge");
 
-      const modalUrl = $("qrModalUrlInput");
-      if(modalUrl) modalUrl.value = QR_PLAYER_URL;
+      if(!modal || !largeQr){
+        console.warn("QRモーダル要素が見つかりません");
+        log("QRモーダル要素が見つかりません");
+        return;
+      }
 
-      const modal = $("qrModal");
-      if(modal) modal.classList.remove("hidden");
+      largeQr.innerHTML = "";
 
-      addAdminLog("QR", "📱 参加者用QRを表示しました");
+      try{
+        if(typeof QRCode === "undefined"){
+          throw new Error("QRCode library not loaded");
+        }
+
+        new QRCode(largeQr, {
+          text: QR_PLAYER_URL,
+          width: 320,
+          height: 320
+        });
+      }catch(e){
+        console.warn("大きいQR生成エラー", e);
+        largeQr.innerHTML = "<div style='color:#111;'>QRコード生成エラー</div>";
+        log("QRコード生成エラー: " + ((e && e.message) || e));
+      }
+
+      modal.style.display = "flex";
+
+      if(typeof addAdminLog === "function"){
+        addAdminLog("QR", "📱 参加者用QRを大きく表示しました");
+      }
+
       log("📱 参加者用QRを大きく表示しました");
     }
 
     function closeQrModal(){
-      const modal = $("qrModal");
-      if(modal) modal.classList.add("hidden");
+      const modal = document.getElementById("qrModal");
+      if(modal) modal.style.display = "none";
     }
 
     function initFirebase(){
@@ -1465,16 +1496,19 @@
         });
       }
 
-      const openQrModalBtn = $("openQrModalBtn");
-      if(openQrModalBtn){
-        openQrModalBtn.addEventListener("click", openQrModal);
+      const showQrModalBtn = document.getElementById("showQrModalBtn");
+      if(showQrModalBtn){
+        showQrModalBtn.addEventListener("click", showQrModal);
       }else{
-        log("⚠️ openQrModalBtn が見つかりません");
+        console.warn("showQrModalBtn が見つかりません");
+        log("⚠️ showQrModalBtn が見つかりません");
       }
 
-      const closeQrModalBtn = $("closeQrModalBtn");
+      const closeQrModalBtn = document.getElementById("closeQrModalBtn");
       if(closeQrModalBtn){
         closeQrModalBtn.addEventListener("click", closeQrModal);
+      }else{
+        console.warn("closeQrModalBtn が見つかりません");
       }
 
       const qrModal = $("qrModal");
