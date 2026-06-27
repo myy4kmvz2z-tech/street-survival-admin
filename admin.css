@@ -387,3 +387,124 @@ body.bossPulse{animation: bossPulse .9s ease}
   .preflight-item{padding:14px 12px}
   .preflight-item span{font-size:14px}
 }
+
+/* QR code panel v1.0 */
+.panel-qr .qr-player-wrap{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  margin-bottom:14px;
+}
+.qr-code-box{
+  display:inline-flex;
+  justify-content:center;
+  align-items:center;
+  padding:12px;
+  background:#fff;
+  border-radius:14px;
+  border:1px solid #d5dce5;
+  min-height:220px;
+  min-width:220px;
+}
+.qr-code-box img,
+.qr-code-box canvas{
+  display:block;
+  max-width:100%;
+  height:auto;
+}
+.qr-code-box-large{
+  min-height:320px;
+  min-width:320px;
+  padding:14px;
+}
+.qr-error{
+  margin:10px 0 0;
+  font-size:13px;
+  color:#ff8a8a;
+  text-align:center;
+}
+.qr-error.hidden{display:none}
+.qr-url-block{
+  display:grid;
+  gap:8px;
+  margin-bottom:12px;
+}
+.qr-url-label{
+  font-size:13px;
+  color:#aeb7c2;
+  font-weight:700;
+}
+.qr-url-input{
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid #303b48;
+  background:#05070a;
+  color:#d5dce5;
+  font-size:13px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+.qr-url-btn,
+.qr-open-modal-btn{
+  width:100%;
+  padding:12px 14px;
+  border:0;
+  border-radius:12px;
+  background:#2a3440;
+  color:#f5f1e8;
+  font-size:14px;
+  font-weight:800;
+  cursor:pointer;
+}
+.qr-open-modal-btn{
+  margin-top:4px;
+  background:#f7c948;
+  color:#111;
+}
+.qr-modal{
+  position:fixed;
+  inset:0;
+  z-index:10000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  background:rgba(0,0,0,.72);
+}
+.qr-modal.hidden{display:none}
+.qr-modal-card{
+  width:min(100%,420px);
+  background:#121820;
+  border:1px solid #2a3440;
+  border-radius:22px;
+  padding:22px 18px;
+  text-align:center;
+  box-shadow:0 24px 60px rgba(0,0,0,.55);
+}
+.qr-modal-title{
+  margin:0 0 6px;
+  font-size:26px;
+  color:#f7c948;
+  letter-spacing:.04em;
+}
+.qr-modal-subtitle{
+  margin:0 0 16px;
+  font-size:15px;
+  color:#aeb7c2;
+}
+.qr-modal-url{margin:14px 0}
+.qr-close-modal-btn{
+  width:100%;
+  padding:14px 16px;
+  border:0;
+  border-radius:14px;
+  background:#59d68d;
+  color:#071009;
+  font-size:16px;
+  font-weight:900;
+  cursor:pointer;
+}
+@media(max-width:560px){
+  .qr-code-box{min-height:200px;min-width:200px}
+  .qr-code-box-large{min-height:280px;min-width:280px}
+}

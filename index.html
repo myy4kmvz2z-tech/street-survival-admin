@@ -91,6 +91,28 @@
       <button type="button" id="resetPreflightBtn" class="preflight-reset-btn">🔄 チェックをリセット</button>
     </section>
 
+    <section class="panel panel-qr">
+      <h3>📱 参加者用QRコード v1.0</h3>
+      <div class="qr-player-wrap">
+        <div id="playerQrCode" class="qr-code-box"></div>
+        <p id="playerQrError" class="qr-error hidden"></p>
+      </div>
+
+      <div class="qr-url-block">
+        <span class="qr-url-label">参加者用URL</span>
+        <input class="qr-url-input" id="qrPlayerUrlInput" readonly value="https://myy4kmvz2z-tech.github.io/street-survival-beta/index.html?v=56">
+        <button type="button" id="qrCopyPlayerUrlBtn" class="qr-url-btn">参加者URLコピー</button>
+      </div>
+
+      <div class="qr-url-block">
+        <span class="qr-url-label">運営側URL</span>
+        <input class="qr-url-input" id="qrAdminUrlInput" readonly value="https://myy4kmvz2z-tech.github.io/street-survival-admin/index.html?v=106">
+        <button type="button" id="qrCopyAdminUrlBtn" class="qr-url-btn">運営URLコピー</button>
+      </div>
+
+      <button type="button" id="openQrModalBtn" class="qr-open-modal-btn">🔍 QRを大きく表示</button>
+    </section>
+
     <section class="panel">
       <h3>🌆 街ステータス v1.0</h3>
       <div class="stats">
@@ -158,9 +180,20 @@
 
   </main>
 
+  <div id="qrModal" class="qr-modal hidden">
+    <div class="qr-modal-card">
+      <h2 class="qr-modal-title">STREET SURVIVAL</h2>
+      <p class="qr-modal-subtitle">参加者用QRコード</p>
+      <div id="playerQrCodeLarge" class="qr-code-box qr-code-box-large"></div>
+      <input class="qr-url-input qr-modal-url" id="qrModalUrlInput" readonly value="https://myy4kmvz2z-tech.github.io/street-survival-beta/index.html?v=56">
+      <button type="button" id="closeQrModalBtn" class="qr-close-modal-btn">QRを閉じる</button>
+    </div>
+  </div>
+
   <script src="firebase-config.js?v=42"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
   <script>
     let db = null;
@@ -188,6 +221,9 @@
       { key: "qrOk", label: "QRコード読み込みOK" },
       { key: "staffShareOk", label: "スタッフ共有OK" }
     ];
+
+    const QR_PLAYER_URL = "https://myy4kmvz2z-tech.github.io/street-survival-beta/index.html?v=56";
+    const QR_ADMIN_URL = "https://myy4kmvz2z-tech.github.io/street-survival-admin/index.html?v=106";
 
     const $ = id => document.getElementById(id);
 
@@ -913,6 +949,97 @@
       }
     }
 
+    function renderPlayerQrCode(containerId, size){
+      const el = $(containerId);
+      if(!el) return false;
+
+      el.innerHTML = "";
+
+      try{
+        if(typeof QRCode === "undefined"){
+          throw new Error("QRCode library not loaded");
+        }
+
+        new QRCode(el, {
+          text: QR_PLAYER_URL,
+          width: size,
+          height: size
+        });
+
+        if(containerId === "playerQrCode"){
+          const errEl = $("playerQrError");
+          if(errEl) errEl.classList.add("hidden");
+        }
+
+        return true;
+      }catch(e){
+        const msg = (e && e.message) || String(e);
+        log("QRコード生成エラー: " + msg);
+
+        if(containerId === "playerQrCode"){
+          const errEl = $("playerQrError");
+          if(errEl){
+            errEl.textContent = "QRコード生成エラー: " + msg;
+            errEl.classList.remove("hidden");
+          }
+        }
+
+        console.warn("renderPlayerQrCode:", e);
+        return false;
+      }
+    }
+
+    function initQrPanel(){
+      renderPlayerQrCode("playerQrCode", 220);
+    }
+
+    async function copyQrUrl(inputId, label, adminLogMessage){
+      const input = $(inputId);
+      const text = input ? input.value : (inputId === "qrPlayerUrlInput" ? QR_PLAYER_URL : QR_ADMIN_URL);
+
+      if(!text){
+        log("コピーできませんでした。URLを長押ししてコピーしてください。");
+        return;
+      }
+
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        try{
+          await navigator.clipboard.writeText(text);
+          log(adminLogMessage);
+          showToast(adminLogMessage);
+          addAdminLog("COPY", adminLogMessage);
+          return;
+        }catch(e){
+          console.warn("copyQrUrl:", e);
+        }
+      }
+
+      if(input){
+        input.focus();
+        input.select();
+      }
+
+      log("コピーできませんでした。URLを長押ししてコピーしてください。");
+    }
+
+    function openQrModal(){
+      renderPlayerQrCode("playerQrCodeLarge", 320);
+
+      const modalUrl = $("qrModalUrlInput");
+      if(modalUrl) modalUrl.value = QR_PLAYER_URL;
+
+      const modal = $("qrModal");
+      if(modal) modal.classList.remove("hidden");
+
+      addAdminLog("QR", "📱 参加者用QRを表示しました");
+      log("📱 参加者用QRを大きく表示しました");
+    }
+
+    function closeQrModal(){
+      const modal = $("qrModal");
+      if(modal) modal.classList.add("hidden");
+    }
+
     function initFirebase(){
       try{
         setStatus("🔥 Firebase: 接続準備中", "status-wait");
@@ -1320,6 +1447,41 @@
       const copyAdminUrlBtn = $("copyAdminUrlBtn");
       if(copyAdminUrlBtn){
         copyAdminUrlBtn.addEventListener("click", () => copyPreflightUrl("adminUrlDisplay", "運営URL"));
+      }
+
+      initQrPanel();
+
+      const qrCopyPlayerUrlBtn = $("qrCopyPlayerUrlBtn");
+      if(qrCopyPlayerUrlBtn){
+        qrCopyPlayerUrlBtn.addEventListener("click", () => {
+          copyQrUrl("qrPlayerUrlInput", "参加者URL", "参加者URLをコピーしました");
+        });
+      }
+
+      const qrCopyAdminUrlBtn = $("qrCopyAdminUrlBtn");
+      if(qrCopyAdminUrlBtn){
+        qrCopyAdminUrlBtn.addEventListener("click", () => {
+          copyQrUrl("qrAdminUrlInput", "運営URL", "運営URLをコピーしました");
+        });
+      }
+
+      const openQrModalBtn = $("openQrModalBtn");
+      if(openQrModalBtn){
+        openQrModalBtn.addEventListener("click", openQrModal);
+      }else{
+        log("⚠️ openQrModalBtn が見つかりません");
+      }
+
+      const closeQrModalBtn = $("closeQrModalBtn");
+      if(closeQrModalBtn){
+        closeQrModalBtn.addEventListener("click", closeQrModal);
+      }
+
+      const qrModal = $("qrModal");
+      if(qrModal){
+        qrModal.addEventListener("click", e => {
+          if(e.target === qrModal) closeQrModal();
+        });
       }
 
       const saveSettingsBtn = $("saveSettingsBtn");
