@@ -125,6 +125,18 @@
       if(el) el.textContent = text;
     }
 
+    function firebaseErrorDetail(e, action){
+      const code = (e && (e.code || e.name)) || "UNKNOWN";
+      const message = (e && e.message) || String(e);
+      let detail = "code=" + code + " / message=" + message;
+
+      if(code === "PERMISSION_DENIED" || /permission/i.test(String(code)) || /permission/i.test(message)){
+        detail = "permission_denied: Firebase Rulesで streetSurvival/settings への" + (action || "アクセス") + "が拒否されました / " + detail;
+      }
+
+      return detail;
+    }
+
     function applySettingsToForm(s){
       if(!s) return;
       $("eventNameInput").value = s.eventName ?? "STREET SURVIVAL";
@@ -183,9 +195,10 @@
         setSettingsStatus("設定: 読込OK");
         log("イベント設定を読み込みました");
       }catch(e){
-        console.warn("loadSettings:", e);
+        const detail = firebaseErrorDetail(e, "読み込み");
         setSettingsStatus("設定: 初期値を使用中");
-        log("イベント設定なし（初期値を使用中）");
+        log("設定読込失敗（初期値を使用中）: " + detail);
+        console.warn("loadSettings:", e);
       }
     }
 
@@ -197,19 +210,24 @@
         }
 
         if(!db){
+          setSettingsStatus("設定: Firebase未接続");
           log("設定保存失敗: Firebase未接続");
           return;
         }
 
         const settings = collectSettingsFromForm();
+        log("設定保存開始: streetSurvival/settings");
         await db.ref("streetSurvival/settings").set(settings);
 
         setSettingsStatus("設定: 保存OK");
         showToast("設定を保存しました");
         log("イベント設定を保存しました");
       }catch(e){
-        setSettingsStatus("設定: 保存エラー");
-        log("設定保存エラー: " + e.message);
+        const detail = firebaseErrorDetail(e, "書き込み");
+        const errText = e && e.message ? e.message : detail;
+        setSettingsStatus("設定: 保存エラー: " + errText);
+        log("設定保存エラー: " + detail);
+        console.error("saveSettings:", e);
       }
     }
 
@@ -549,7 +567,13 @@
         sendCommand("RADIO", $("radioInput")?.value || "運営速報");
       });
 
-      $("saveSettingsBtn").addEventListener("click", saveSettings);
+      const saveSettingsBtn = $("saveSettingsBtn");
+      if(saveSettingsBtn){
+        saveSettingsBtn.addEventListener("click", saveSettings);
+      }else{
+        log("⚠️ saveSettingsBtn が見つかりません");
+      }
+
       $("testHunterBtn").addEventListener("click", testHunter30);
       $("randomHunterBtn").addEventListener("click", randomHunter10min);
       $("allRunnerBtn").addEventListener("click", allRunner);
