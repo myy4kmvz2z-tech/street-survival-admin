@@ -68,7 +68,7 @@
         <label style="display:block;font-size:14px;color:#aeb7c2;">LIVEメッセージ<input id="liveMessageInput" value="🎵 LIVE開始！"></label>
       </div>
       <button id="saveSettingsBtn" class="send">💾 設定を保存</button>
-      <p id="settingsStatus" style="font-size:13px;color:#aaa;margin-bottom:0;">設定: 未読込</p>
+      <p id="settingsStatus" style="font-size:13px;color:#aaa;margin-bottom:0;">設定: 初期値を使用中</p>
     </section>
 
     <section class="panel">
@@ -158,23 +158,34 @@
     }
 
     async function loadSettings(){
-      if(!db) return;
+      if(!db){
+        setSettingsStatus("設定: 初期値を使用中");
+        return;
+      }
 
       try{
-        const snap = await db.ref("streetSurvival/settings").get();
-        const settings = snap.val();
+        const snap = await db.ref("streetSurvival/settings").once("value");
 
-        if(settings){
-          applySettingsToForm(settings);
-          setSettingsStatus("設定: 読込OK");
-          log("イベント設定を読み込みました");
-        }else{
-          setSettingsStatus("設定: 初期値を使用");
-          log("イベント設定なし（初期値を使用）");
+        if(!snap.exists()){
+          setSettingsStatus("設定: 初期値を使用中");
+          log("イベント設定なし（初期値を使用中）");
+          return;
         }
+
+        const settings = snap.val();
+        if(!settings || typeof settings !== "object"){
+          setSettingsStatus("設定: 初期値を使用中");
+          log("イベント設定なし（初期値を使用中）");
+          return;
+        }
+
+        applySettingsToForm(settings);
+        setSettingsStatus("設定: 読込OK");
+        log("イベント設定を読み込みました");
       }catch(e){
-        setSettingsStatus("設定: 読込エラー");
-        log("設定読込エラー: " + e.message);
+        console.warn("loadSettings:", e);
+        setSettingsStatus("設定: 初期値を使用中");
+        log("イベント設定なし（初期値を使用中）");
       }
     }
 
@@ -193,7 +204,7 @@
         const settings = collectSettingsFromForm();
         await db.ref("streetSurvival/settings").set(settings);
 
-        setSettingsStatus("設定: 保存OK (" + new Date().toLocaleTimeString() + ")");
+        setSettingsStatus("設定: 保存OK");
         showToast("設定を保存しました");
         log("イベント設定を保存しました");
       }catch(e){
