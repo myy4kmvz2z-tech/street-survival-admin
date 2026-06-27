@@ -93,6 +93,14 @@
     </section>
 
     <section class="panel">
+      <h3>📜 運営ログ v1.0</h3>
+      <div id="adminLogList" class="admin-log-list">
+        <p class="admin-log-empty">ログはまだありません</p>
+      </div>
+      <button id="clearAdminLogsBtn" class="send admin-log-clear">🧹 ログをクリア</button>
+    </section>
+
+    <section class="panel">
       <h3>📋 運営ログ</h3>
       <pre id="log"></pre>
     </section>
@@ -138,10 +146,111 @@
       let detail = "code=" + code + " / message=" + message;
 
       if(code === "PERMISSION_DENIED" || /permission/i.test(String(code)) || /permission/i.test(message)){
-        detail = "permission_denied: Firebase Rulesで streetSurvival/settings への" + (action || "アクセス") + "が拒否されました / " + detail;
+        detail = "permission_denied: Firebase Rulesで streetSurvival/" + (action || "data") + " への操作が拒否されました / " + detail;
       }
 
       return detail;
+    }
+
+    async function addAdminLog(type, message, extra = {}){
+      if(!db) return;
+
+      try{
+        const payload = {
+          type,
+          message,
+          createdAt: Date.now()
+        };
+
+        if(extra.playerId) payload.playerId = extra.playerId;
+        if(extra.nickname) payload.nickname = extra.nickname;
+
+        await db.ref("streetSurvival/adminLogs").push(payload);
+      }catch(e){
+        const code = (e && (e.code || e.name)) || "";
+        const msg = (e && e.message) || String(e);
+
+        if(code === "PERMISSION_DENIED" || /permission/i.test(String(code)) || /permission/i.test(msg)){
+          log("運営ログ保存エラー: Firebase Rulesで adminLogs への書き込みが許可されていません");
+        }else{
+          log("運営ログ保存エラー: " + msg);
+        }
+
+        console.warn("addAdminLog:", e);
+      }
+    }
+
+    function formatLogTime(createdAt){
+      const ts = parseTime(createdAt);
+      if(!ts) return "--:--:--";
+      return new Date(ts).toLocaleTimeString("ja-JP", { hour12: false });
+    }
+
+    function renderAdminLogs(logs){
+      const container = $("adminLogList");
+      if(!container) return;
+
+      const entries = Object.entries(logs || {})
+        .map(([id, item]) => ({ id, ...(item || {}) }))
+        .filter(item => item && item.message)
+        .sort((a, b) => (parseTime(b.createdAt) || 0) - (parseTime(a.createdAt) || 0))
+        .slice(0, 20);
+
+      if(entries.length === 0){
+        container.innerHTML = '<p class="admin-log-empty">ログはまだありません</p>';
+        return;
+      }
+
+      container.innerHTML = entries.map(item =>
+        '<div class="admin-log-item">' +
+          '<span class="admin-log-time">' + escapeHtml(formatLogTime(item.createdAt)) + '</span>' +
+          '<span class="admin-log-message">' + escapeHtml(item.message) + '</span>' +
+        '</div>'
+      ).join("");
+    }
+
+    function eventLogLabel(type){
+      const labels = {
+        NORMAL: "🌆 NORMALを発令しました",
+        ALERT: "⚠️ ALERTを発令しました",
+        BOSS: "👹 BOSSを発令しました",
+        MISSION: "🎯 MISSIONを発令しました",
+        LIVE: "🎵 LIVEを発令しました",
+        SAFE: "🛡 SAFEを発令しました",
+        FINAL: "🔥 FINALを発令しました",
+        END: "🏆 ENDを発令しました"
+      };
+      return labels[type] || ("📣 " + type + "を発令しました");
+    }
+
+    async function clearAdminLogs(){
+      try{
+        if(!(await ensureDbReady())){
+          log("ログクリア失敗: Firebase未接続");
+          return;
+        }
+
+        const ok = confirm("運営ログをすべて削除しますか？");
+        if(!ok){
+          log("運営ログクリアをキャンセル");
+          return;
+        }
+
+        await db.ref("streetSurvival/adminLogs").remove();
+        await addAdminLog("CLEAR", "🧹 運営ログをクリアしました");
+        log("🧹 運営ログをクリアしました");
+      }catch(e){
+        const code = (e && (e.code || e.name)) || "";
+        const msg = (e && e.message) || String(e);
+
+        if(code === "PERMISSION_DENIED" || /permission/i.test(String(code)) || /permission/i.test(msg)){
+          log("運営ログクリアエラー: Firebase Rulesで adminLogs への操作が許可されていません");
+        }else{
+          log("運営ログクリアエラー: " + msg);
+        }
+
+        console.warn("clearAdminLogs:", e);
+      }
     }
 
     function applySettingsToForm(s){
@@ -404,6 +513,7 @@
         });
 
         log("🔵 RUNNER化: " + nickname);
+        addAdminLog("RUNNER", "🔵 " + nickname + "をRUNNERにしました", { playerId, nickname });
       }catch(e){
         log("参加者一覧エラー: " + e.message);
       }
@@ -425,6 +535,7 @@
         });
 
         log("🟢 HUNTER化: " + nickname + " / " + minutes + "分");
+        addAdminLog("HUNTER", "🟢 " + nickname + "をHUNTERにしました", { playerId, nickname });
       }catch(e){
         log("参加者一覧エラー: " + e.message);
       }
@@ -444,6 +555,7 @@
         });
 
         log("❤️ HP回復: " + nickname + " / HP:" + maxHp);
+        addAdminLog("HEAL", "❤️ " + nickname + "のHPを回復しました", { playerId, nickname });
       }catch(e){
         log("参加者一覧エラー: " + e.message);
       }
@@ -464,6 +576,7 @@
 
         await db.ref("streetSurvival/players/" + playerId).remove();
         log("🗑 参加者削除: " + nickname);
+        addAdminLog("DELETE", "🗑 " + nickname + "を削除しました", { playerId, nickname });
       }catch(e){
         log("参加者一覧エラー: " + e.message);
       }
@@ -546,6 +659,21 @@
           log("参加者一覧エラー: " + ((err && err.message) || err));
         });
 
+        db.ref("streetSurvival/adminLogs").on("value", snap => {
+          try{
+            renderAdminLogs(snap.val() || {});
+          }catch(e){
+            log("運営ログ表示エラー: " + e.message);
+          }
+        }, err => {
+          const msg = (err && err.message) || err;
+          if(/permission/i.test(String(msg))){
+            log("運営ログ表示エラー: Firebase Rulesで adminLogs への読み込みが許可されていません");
+          }else{
+            log("運営ログ表示エラー: " + msg);
+          }
+        });
+
         loadSettings();
 
       }catch(e){
@@ -577,6 +705,12 @@
 
       await db.ref("streetSurvival/currentCommand").set(cmd);
       await db.ref("streetSurvival/commandLog").push(cmd);
+
+      if(type === "RADIO"){
+        addAdminLog("RADIO", "📻 RADIO送信: " + (message || ""));
+      }else{
+        addAdminLog("EVENT", eventLogLabel(type));
+      }
 
       showToast("送信成功: " + type);
       log("Firebase送信OK: " + type + (message ? " / " + message : ""));
@@ -627,6 +761,7 @@
 
         log(label + " OK: " + hunterCount + "人");
         setAdminStatus(label + " OK: " + hunterCount + "人");
+        addAdminLog("HUNTER", label + "：" + hunterCount + "人をHUNTERにしました");
 
       }catch(e){
         console.error(e);
@@ -670,6 +805,7 @@
         await sendCommand("RADIO", "🔵 全員RUNNERに戻しました");
 
         log("全員RUNNER OK");
+        addAdminLog("RUNNER", "🔵 全員RUNNERに戻しました");
       }catch(e){
         log("全員RUNNERエラー: " + e.message);
       }
@@ -698,6 +834,7 @@
         await sendCommand("RADIO", "❤️ 全員HP回復しました");
 
         log("全員HP回復 OK");
+        addAdminLog("HEAL", "❤️ 全員HP回復しました");
       }catch(e){
         log("HP回復エラー: " + e.message);
       }
@@ -729,6 +866,7 @@
         await sendCommand("RADIO", "🔄 全員リセットしました");
 
         log("全員リセット OK");
+        addAdminLog("RESET", "🔄 全員リセットしました");
       }catch(e){
         log("全員リセットエラー: " + e.message);
       }
@@ -758,6 +896,7 @@
         await sendCommand("RADIO", "⚠️ 全参加者データをリセットしました。参加者は再読み込みしてください。");
 
         log("全参加者を強制削除しました");
+        addAdminLog("DELETE", "⚠️ 全参加者を強制削除しました");
       }catch(e){
         log("強制削除エラー: " + e.message);
       }
@@ -830,6 +969,13 @@
       $("resetAllBtn").addEventListener("click", resetAll);
       $("cleanupBtn").addEventListener("click", cleanupPlayers);
       $("forceDeleteBtn").addEventListener("click", forceDeletePlayers);
+
+      const clearAdminLogsBtn = $("clearAdminLogsBtn");
+      if(clearAdminLogsBtn){
+        clearAdminLogsBtn.addEventListener("click", clearAdminLogs);
+      }else{
+        log("⚠️ clearAdminLogsBtn が見つかりません");
+      }
 
       log("v1.0 ボタン接続OK");
     });

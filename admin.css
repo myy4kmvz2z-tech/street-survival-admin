@@ -221,3 +221,40 @@ body.bossPulse{animation: bossPulse .9s ease}
     padding:12px 10px;
   }
 }
+
+/* Admin log v1.0 */
+.admin-log-list{
+  max-height:300px;
+  overflow-y:auto;
+  display:grid;
+  gap:8px;
+  padding-right:4px;
+}
+.admin-log-empty{color:#aeb7c2;font-size:14px;margin:0;padding:6px 0}
+.admin-log-item{
+  background:#05070a;
+  border:1px solid #2d3845;
+  border-radius:12px;
+  padding:10px 12px;
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+}
+.admin-log-time{
+  font-size:12px;
+  color:#7a8491;
+  white-space:nowrap;
+  min-width:66px;
+  font-variant-numeric:tabular-nums;
+}
+.admin-log-message{
+  font-size:14px;
+  color:#d5dce5;
+  line-height:1.5;
+  flex:1;
+}
+.admin-log-clear{
+  margin-top:12px;
+  background:#2a3440;
+  color:#f5f1e8;
+}

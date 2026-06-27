@@ -16,6 +16,10 @@
       "settings": {
         ".read": true,
         ".write": true
+      },
+      "adminLogs": {
+        ".read": true,
+        ".write": true
       }
     }
   }
