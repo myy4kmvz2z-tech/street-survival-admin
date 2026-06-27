@@ -28,6 +28,10 @@
       "preflightChecklist": {
         ".read": true,
         ".write": true
+      },
+      "manualCheck": {
+        ".read": true,
+        ".write": true
       }
     }
   }

@@ -113,6 +113,130 @@
       <button type="button" id="showQrModalBtn" class="qr-open-modal-btn">🔍 QRを大きく表示</button>
     </section>
 
+    <section class="panel panel-manual">
+      <div class="manual-header">
+        <h3>📘 当日運営マニュアル v1.0</h3>
+        <button type="button" id="toggleManualBtn" class="manual-toggle-btn">📘 マニュアルを閉じる</button>
+      </div>
+
+      <div id="manualPanelBody" class="manual-body">
+        <div class="manual-scroll">
+          <div class="manual-section">
+            <h4>【1. 開始前準備】</h4>
+            <ul>
+              <li>Firebase接続が「接続OK」になっているか確認</li>
+              <li>本番前チェックリストを上から順番に確認</li>
+              <li>イベント設定 v1.0 の内容を確認</li>
+              <li>HUNTER時間、HP、距離設定を確認</li>
+              <li>緊急停止ボタンの場所をスタッフ全員で確認</li>
+            </ul>
+          </div>
+
+          <div class="manual-section">
+            <h4>【2. 参加者受付】</h4>
+            <ul>
+              <li>参加者用QRコードを大きく表示する</li>
+              <li>参加者にQRを読み込んでもらう</li>
+              <li>ニックネームを入力してもらう</li>
+              <li>安全ルールに同意してもらう</li>
+              <li>位置情報チェックをしてもらう</li>
+              <li>通知許可をしてもらう</li>
+              <li>運営画面の参加者一覧に名前が出るか確認</li>
+            </ul>
+          </div>
+
+          <div class="manual-section">
+            <h4>【3. 開始前テスト】</h4>
+            <ul>
+              <li>参加者が1人以上表示されているか確認</li>
+              <li>RADIO送信テストを行う</li>
+              <li>テストHUNTERを実行する</li>
+              <li>参加者側でHUNTER表示とカウントダウンが出るか確認</li>
+              <li>HUNTER終了後にRUNNERへ戻るか確認</li>
+              <li>緊急停止テストを行う</li>
+              <li>緊急停止解除で通常画面に戻るか確認</li>
+            </ul>
+          </div>
+
+          <div class="manual-section">
+            <h4>【4. ゲーム開始】</h4>
+            <ul>
+              <li>RADIOで開始案内を送る</li>
+              <li>必要ならNORMALまたはLIVEを発令</li>
+              <li>ランダム3人HUNTER / 10分を押す</li>
+              <li>参加者一覧でHUNTER / RUNNER人数を確認</li>
+              <li>運営ログに操作履歴が残っているか確認</li>
+            </ul>
+          </div>
+
+          <div class="manual-section">
+            <h4>【5. ゲーム中の運営】</h4>
+            <ul>
+              <li>参加者一覧で状態を確認する</li>
+              <li>必要に応じて個別にRUNNER / HUNTERへ変更</li>
+              <li>HP回復が必要な参加者は個別または全員HP回復</li>
+              <li>RADIOで集合・注意・イベント案内を送る</li>
+              <li>BOSS / MISSION / SAFE / FINAL などを状況に応じて発令</li>
+              <li>トラブルや危険があればすぐ緊急停止する</li>
+            </ul>
+          </div>
+
+          <div class="manual-section">
+            <h4>【6. 緊急時】</h4>
+            <ul>
+              <li>事故・迷惑行為・交通トラブル・体調不良が出たら「🚨 緊急停止する」を押す</li>
+              <li>参加者側に停止画面が出ているか確認</li>
+              <li>RADIOまたは口頭で安全確認を案内</li>
+              <li>問題が解決するまで再開しない</li>
+              <li>再開できる場合のみ「✅ 緊急停止を解除」を押す</li>
+            </ul>
+          </div>
+
+          <div class="manual-section">
+            <h4>【7. 終了時】</h4>
+            <ul>
+              <li>RADIOで終了案内を送る</li>
+              <li>ENDを発令</li>
+              <li>全員RUNNERに戻す</li>
+              <li>必要なら全員HP回復</li>
+              <li>運営ログを確認</li>
+              <li>参加者データを残すか削除するか判断</li>
+              <li>終了後に全参加者強制削除を使う場合は慎重に確認</li>
+            </ul>
+          </div>
+
+          <div class="manual-important">
+            <h4>⚠️ 重要</h4>
+            <ul>
+              <li>危ないと思ったらゲームより安全優先</li>
+              <li>道路への飛び出しは禁止</li>
+              <li>店舗・通行人への迷惑行為は禁止</li>
+              <li>緊急停止が出たら必ず止まる</li>
+              <li>運営スタッフの指示を最優先</li>
+            </ul>
+          </div>
+
+          <div class="manual-quick">
+            <h4>よく使うボタン</h4>
+            <ul class="manual-quick-list">
+              <li>📱 QRを大きく表示</li>
+              <li>📻 RADIO送信</li>
+              <li>⏱ テストHUNTER</li>
+              <li>🎲 ランダム3人HUNTER</li>
+              <li>🔵 全員RUNNER</li>
+              <li>🚨 緊急停止</li>
+              <li>✅ 緊急停止解除</li>
+            </ul>
+          </div>
+
+          <label class="manual-check-item" id="manualCheckRow">
+            <input type="checkbox" id="manualStaffCheck">
+            <span>スタッフ全員で運営手順を確認しました</span>
+          </label>
+        </div>
+      </div>
+    </section>
+
     <section class="panel">
       <h3>🌆 街ステータス v1.0</h3>
       <div class="stats">
@@ -206,6 +330,8 @@
     let db = null;
     let preflightLoading = false;
     let preflightState = {};
+    let manualCheckLoading = false;
+    let manualCheckState = { checked: false };
 
     const PREFLIGHT_ITEMS = [
       { key: "firebaseOk", label: "Firebase接続OK" },
@@ -1071,6 +1197,74 @@
       if(modal) modal.style.display = "none";
     }
 
+    function toggleManualPanel(){
+      const body = $("manualPanelBody");
+      const btn = $("toggleManualBtn");
+      if(!body || !btn) return;
+
+      const isOpen = !body.classList.contains("manual-collapsed");
+
+      if(isOpen){
+        body.classList.add("manual-collapsed");
+        btn.textContent = "📘 マニュアルを開く";
+      }else{
+        body.classList.remove("manual-collapsed");
+        btn.textContent = "📘 マニュアルを閉じる";
+      }
+    }
+
+    function applyManualCheck(data){
+      const checked = !!(data && data.checked);
+      const cb = $("manualStaffCheck");
+      const row = $("manualCheckRow");
+
+      if(cb) cb.checked = checked;
+      if(row){
+        row.className = checked ? "manual-check-item manual-check-item-done" : "manual-check-item";
+      }
+
+      manualCheckState = { checked, updatedAt: data && data.updatedAt };
+    }
+
+    async function saveManualCheck(userInitiated){
+      if(manualCheckLoading || !db) return;
+
+      const wasChecked = manualCheckState.checked === true;
+      const cb = $("manualStaffCheck");
+      const checked = cb ? !!cb.checked : false;
+
+      try{
+        const payload = {
+          checked,
+          updatedAt: Date.now()
+        };
+
+        await db.ref("streetSurvival/manualCheck").set(payload);
+        manualCheckState = payload;
+        applyManualCheck(payload);
+
+        if(userInitiated && !wasChecked && checked){
+          addAdminLog("MANUAL", "📘 当日運営マニュアルを確認しました");
+          log("📘 当日運営マニュアルを確認しました");
+        }
+      }catch(e){
+        const msg = (e && e.message) || String(e);
+
+        if(/permission/i.test(msg)){
+          log("マニュアル確認保存エラー: Firebase Rulesで manualCheck への書き込みが許可されていません");
+        }else{
+          log("マニュアル確認保存エラー: " + msg);
+        }
+
+        console.warn("saveManualCheck:", e);
+      }
+    }
+
+    function handleManualCheckChange(){
+      applyManualCheck({ checked: !!($("manualStaffCheck") && $("manualStaffCheck").checked) });
+      saveManualCheck(true);
+    }
+
     function initFirebase(){
       try{
         setStatus("🔥 Firebase: 接続準備中", "status-wait");
@@ -1161,6 +1355,25 @@
             log("チェックリスト読込エラー: Firebase Rulesで preflightChecklist への読み込みが許可されていません");
           }else{
             log("チェックリスト読込エラー: " + msg);
+          }
+        });
+
+        db.ref("streetSurvival/manualCheck").on("value", snap => {
+          try{
+            manualCheckLoading = true;
+            const data = snap.val() || { checked: false };
+            applyManualCheck(data);
+          }catch(e){
+            log("マニュアル確認読込エラー: " + e.message);
+          }finally{
+            manualCheckLoading = false;
+          }
+        }, err => {
+          const msg = (err && err.message) || err;
+          if(/permission/i.test(String(msg))){
+            log("マニュアル確認読込エラー: Firebase Rulesで manualCheck への読み込みが許可されていません");
+          }else{
+            log("マニュアル確認読込エラー: " + msg);
           }
         });
 
@@ -1516,6 +1729,20 @@
         qrModal.addEventListener("click", e => {
           if(e.target === qrModal) closeQrModal();
         });
+      }
+
+      const toggleManualBtn = $("toggleManualBtn");
+      if(toggleManualBtn){
+        toggleManualBtn.addEventListener("click", toggleManualPanel);
+      }else{
+        log("⚠️ toggleManualBtn が見つかりません");
+      }
+
+      const manualStaffCheck = $("manualStaffCheck");
+      if(manualStaffCheck){
+        manualStaffCheck.addEventListener("change", handleManualCheckChange);
+      }else{
+        log("⚠️ manualStaffCheck が見つかりません");
       }
 
       const saveSettingsBtn = $("saveSettingsBtn");
