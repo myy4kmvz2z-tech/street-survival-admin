@@ -61,6 +61,7 @@
         <button id="healAllBtn" style="padding:12px;font-size:16px;">❤️ 全員HP回復</button>
         <button id="resetAllBtn" style="padding:12px;font-size:16px;">🔄 全員リセット</button>
         <button id="cleanupBtn" style="padding:12px;font-size:16px;">🧹 古い参加者削除</button>
+        <button id="forceDeleteBtn" style="padding:12px;font-size:16px;background:#5b1111;color:#fff;">⚠️ 全参加者を強制削除</button>
       </div>
       <p id="adminStatus" style="font-size:13px;color:#aaa;margin-bottom:0;">v54: 待機中</p>
     </section>
@@ -357,6 +358,35 @@
       }
     }
 
+    async function forceDeletePlayers(){
+      try{
+        if(!db){
+          initFirebase();
+          await new Promise(resolve => setTimeout(resolve, 800));
+        }
+
+        if(!db){
+          log("強制削除失敗: Firebase未接続");
+          return;
+        }
+
+        const ok = confirm("本当に全参加者を削除しますか？テスト用です。");
+
+        if(!ok){
+          log("全参加者強制削除をキャンセル");
+          return;
+        }
+
+        await db.ref("streetSurvival/players").remove();
+
+        await sendCommand("RADIO", "⚠️ 全参加者データをリセットしました。参加者は再読み込みしてください。");
+
+        log("全参加者を強制削除しました");
+      }catch(e){
+        log("強制削除エラー: " + e.message);
+      }
+    }
+
     async function cleanupPlayers(){
       try{
         if(!db){
@@ -397,6 +427,7 @@
       $("healAllBtn").addEventListener("click", healAll);
       $("resetAllBtn").addEventListener("click", resetAll);
       $("cleanupBtn").addEventListener("click", cleanupPlayers);
+      $("forceDeleteBtn").addEventListener("click", forceDeletePlayers);
 
       log("v54 ボタン接続OK");
     });
