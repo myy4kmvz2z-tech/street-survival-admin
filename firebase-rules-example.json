@@ -32,6 +32,10 @@
       "manualCheck": {
         ".read": true,
         ".write": true
+      },
+      "areaSettings": {
+        ".read": true,
+        ".write": true
       }
     }
   }

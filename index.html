@@ -275,6 +275,37 @@
       <p id="settingsStatus" style="font-size:13px;color:#aaa;margin-bottom:0;">設定: 初期値を使用中</p>
     </section>
 
+    <section class="panel panel-area">
+      <h3>🗺 エリア設定 v1.0</h3>
+
+      <div class="area-card area-card-onn">
+        <h4>🟢 Onn SAFE</h4>
+        <label class="area-field">緯度<input id="onnLatInput" type="number" step="any" value="35.495000"></label>
+        <label class="area-field">経度<input id="onnLngInput" type="number" step="any" value="137.500000"></label>
+        <label class="area-field">半径m<input id="onnRadiusInput" type="number" step="1" value="80"></label>
+        <button type="button" id="setCurrentToOnnBtn" class="area-geo-btn">📍 現在地をOnn SAFEに設定</button>
+      </div>
+
+      <div class="area-card area-card-honmachi">
+        <h4>🟡 本町</h4>
+        <label class="area-field">緯度<input id="honmachiLatInput" type="number" step="any" value="35.495500"></label>
+        <label class="area-field">経度<input id="honmachiLngInput" type="number" step="any" value="137.501000"></label>
+        <label class="area-field">半径m<input id="honmachiRadiusInput" type="number" step="1" value="180"></label>
+        <button type="button" id="setCurrentToHonmachiBtn" class="area-geo-btn">📍 現在地を本町に設定</button>
+      </div>
+
+      <div class="area-card area-card-shinmachi">
+        <h4>🔴 新町</h4>
+        <label class="area-field">緯度<input id="shinmachiLatInput" type="number" step="any" value="35.496000"></label>
+        <label class="area-field">経度<input id="shinmachiLngInput" type="number" step="any" value="137.502000"></label>
+        <label class="area-field">半径m<input id="shinmachiRadiusInput" type="number" step="1" value="180"></label>
+        <button type="button" id="setCurrentToShinmachiBtn" class="area-geo-btn">📍 現在地を新町に設定</button>
+      </div>
+
+      <button type="button" id="saveAreaSettingsBtn" class="area-save-btn">💾 エリア設定を保存</button>
+      <p id="areaSettingsStatus" class="area-settings-status">エリア設定: 初期値を使用中</p>
+    </section>
+
     <section class="panel">
       <h3>🛠 ADMIN CONTROL v1.0</h3>
       <div style="display:grid;gap:10px;">
@@ -382,6 +413,195 @@
     function setSettingsStatus(text){
       const el = $("settingsStatus");
       if(el) el.textContent = text;
+    }
+
+    function setAreaSettingsStatus(text){
+      const el = $("areaSettingsStatus");
+      if(el) el.textContent = text;
+    }
+
+    function getDefaultAreaSettings(){
+      return {
+        onnSafe: {
+          name: "Onn SAFE",
+          label: "🟢 Onn SAFE",
+          lat: 35.495,
+          lng: 137.5,
+          radiusM: 80
+        },
+        honmachi: {
+          name: "本町",
+          label: "🟡 本町",
+          lat: 35.4955,
+          lng: 137.501,
+          radiusM: 180
+        },
+        shinmachi: {
+          name: "新町",
+          label: "🔴 新町",
+          lat: 35.496,
+          lng: 137.502,
+          radiusM: 180
+        }
+      };
+    }
+
+    function applyAreaSettingsToForm(data){
+      const defaults = getDefaultAreaSettings();
+      const onn = { ...defaults.onnSafe, ...(data && data.onnSafe) };
+      const honmachi = { ...defaults.honmachi, ...(data && data.honmachi) };
+      const shinmachi = { ...defaults.shinmachi, ...(data && data.shinmachi) };
+
+      $("onnLatInput").value = onn.lat;
+      $("onnLngInput").value = onn.lng;
+      $("onnRadiusInput").value = onn.radiusM;
+      $("honmachiLatInput").value = honmachi.lat;
+      $("honmachiLngInput").value = honmachi.lng;
+      $("honmachiRadiusInput").value = honmachi.radiusM;
+      $("shinmachiLatInput").value = shinmachi.lat;
+      $("shinmachiLngInput").value = shinmachi.lng;
+      $("shinmachiRadiusInput").value = shinmachi.radiusM;
+    }
+
+    function parseAreaNumber(value){
+      if(value === "" || value == null) return null;
+      const n = Number(value);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function validateAreaForm(){
+      const groups = [
+        { lat: "onnLatInput", lng: "onnLngInput", radius: "onnRadiusInput" },
+        { lat: "honmachiLatInput", lng: "honmachiLngInput", radius: "honmachiRadiusInput" },
+        { lat: "shinmachiLatInput", lng: "shinmachiLngInput", radius: "shinmachiRadiusInput" }
+      ];
+
+      for(const g of groups){
+        const lat = parseAreaNumber($(g.lat)?.value);
+        const lng = parseAreaNumber($(g.lng)?.value);
+        const radius = parseAreaNumber($(g.radius)?.value);
+
+        if(lat === null || lng === null || radius === null) return false;
+        if(radius < 10 || radius > 1000) return false;
+      }
+
+      return true;
+    }
+
+    function collectAreaSettingsFromForm(){
+      return {
+        onnSafe: {
+          name: "Onn SAFE",
+          label: "🟢 Onn SAFE",
+          lat: Number($("onnLatInput").value),
+          lng: Number($("onnLngInput").value),
+          radiusM: Number($("onnRadiusInput").value)
+        },
+        honmachi: {
+          name: "本町",
+          label: "🟡 本町",
+          lat: Number($("honmachiLatInput").value),
+          lng: Number($("honmachiLngInput").value),
+          radiusM: Number($("honmachiRadiusInput").value)
+        },
+        shinmachi: {
+          name: "新町",
+          label: "🔴 新町",
+          lat: Number($("shinmachiLatInput").value),
+          lng: Number($("shinmachiLngInput").value),
+          radiusM: Number($("shinmachiRadiusInput").value)
+        },
+        updatedAt: Date.now()
+      };
+    }
+
+    async function saveAreaSettings(){
+      if(!validateAreaForm()){
+        setAreaSettingsStatus("エリア設定: 数値を確認してください");
+        log("エリア設定: 数値を確認してください");
+        return;
+      }
+
+      try{
+        if(!db){
+          initFirebase();
+          await new Promise(resolve => setTimeout(resolve, 800));
+        }
+
+        if(!db){
+          setAreaSettingsStatus("エリア設定: Firebase未接続");
+          log("エリア設定保存失敗: Firebase未接続");
+          return;
+        }
+
+        const data = collectAreaSettingsFromForm();
+        await db.ref("streetSurvival/areaSettings").set(data);
+
+        setAreaSettingsStatus("エリア設定: 保存OK");
+        showToast("エリア設定を保存しました");
+        addAdminLog("AREA_SETTINGS", "🗺 エリア設定を保存しました");
+        log("🗺 エリア設定を保存しました");
+      }catch(e){
+        const msg = (e && e.message) || String(e);
+        setAreaSettingsStatus("エリア設定: 保存エラー: " + msg);
+        log("エリア設定保存エラー: " + msg);
+        console.error("saveAreaSettings:", e);
+      }
+    }
+
+    function setCurrentLocationTo(latInputId, lngInputId, areaLabel, adminLogMessage){
+      if(!navigator.geolocation){
+        setAreaSettingsStatus("エリア設定: 現在地を取得できません");
+        log("エリア設定: 現在地を取得できません");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          const latInput = $(latInputId);
+          const lngInput = $(lngInputId);
+
+          if(latInput) latInput.value = pos.coords.latitude.toFixed(6);
+          if(lngInput) lngInput.value = pos.coords.longitude.toFixed(6);
+
+          setAreaSettingsStatus("エリア設定: 現在地を" + areaLabel + "に反映しました");
+          log("エリア設定: 現在地を" + areaLabel + "に反映しました");
+          addAdminLog("AREA_SETTINGS", adminLogMessage);
+        },
+        err => {
+          setAreaSettingsStatus("エリア設定: 現在地を取得できません");
+          log("エリア設定: 現在地を取得できません");
+          console.warn("geolocation:", err);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    }
+
+    function setCurrentToOnn(){
+      setCurrentLocationTo(
+        "onnLatInput",
+        "onnLngInput",
+        "Onn SAFE",
+        "📍 現在地をOnn SAFEに設定しました"
+      );
+    }
+
+    function setCurrentToHonmachi(){
+      setCurrentLocationTo(
+        "honmachiLatInput",
+        "honmachiLngInput",
+        "本町",
+        "📍 現在地を本町に設定しました"
+      );
+    }
+
+    function setCurrentToShinmachi(){
+      setCurrentLocationTo(
+        "shinmachiLatInput",
+        "shinmachiLngInput",
+        "新町",
+        "📍 現在地を新町に設定しました"
+      );
     }
 
     function firebaseErrorDetail(e, action){
@@ -1377,6 +1597,27 @@
           }
         });
 
+        db.ref("streetSurvival/areaSettings").on("value", snap => {
+          try{
+            if(snap.exists()){
+              applyAreaSettingsToForm(snap.val());
+              setAreaSettingsStatus("エリア設定: 読込OK");
+            }else{
+              applyAreaSettingsToForm(getDefaultAreaSettings());
+              setAreaSettingsStatus("エリア設定: 初期値を使用中");
+            }
+          }catch(e){
+            log("エリア設定読込エラー: " + e.message);
+          }
+        }, err => {
+          const msg = (err && err.message) || err;
+          if(/permission/i.test(String(msg))){
+            log("エリア設定読込エラー: Firebase Rulesで areaSettings への読み込みが許可されていません");
+          }else{
+            log("エリア設定読込エラー: " + msg);
+          }
+        });
+
         loadSettings();
 
       }catch(e){
@@ -1751,6 +1992,22 @@
       }else{
         log("⚠️ saveSettingsBtn が見つかりません");
       }
+
+      const saveAreaSettingsBtn = $("saveAreaSettingsBtn");
+      if(saveAreaSettingsBtn){
+        saveAreaSettingsBtn.addEventListener("click", saveAreaSettings);
+      }else{
+        log("⚠️ saveAreaSettingsBtn が見つかりません");
+      }
+
+      const setCurrentToOnnBtn = $("setCurrentToOnnBtn");
+      if(setCurrentToOnnBtn) setCurrentToOnnBtn.addEventListener("click", setCurrentToOnn);
+
+      const setCurrentToHonmachiBtn = $("setCurrentToHonmachiBtn");
+      if(setCurrentToHonmachiBtn) setCurrentToHonmachiBtn.addEventListener("click", setCurrentToHonmachi);
+
+      const setCurrentToShinmachiBtn = $("setCurrentToShinmachiBtn");
+      if(setCurrentToShinmachiBtn) setCurrentToShinmachiBtn.addEventListener("click", setCurrentToShinmachi);
 
       const playerList = $("playerList");
       if(playerList){

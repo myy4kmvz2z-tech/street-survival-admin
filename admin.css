@@ -639,3 +639,61 @@ body.bossPulse{animation: bossPulse .9s ease}
   .manual-section h4{font-size:16px}
   .manual-section ul{font-size:13px}
 }
+
+/* Area settings v1.0 */
+.area-card{
+  background:#05070a;
+  border:1px solid #2d3845;
+  border-radius:14px;
+  padding:14px 16px;
+  margin-bottom:12px;
+  display:grid;
+  gap:10px;
+}
+.area-card h4{
+  margin:0;
+  font-size:16px;
+  font-weight:900;
+}
+.area-card-onn h4{color:#59d68d}
+.area-card-honmachi h4{color:#f7c948}
+.area-card-shinmachi h4{color:#ff8a8a}
+.area-field{
+  display:block;
+  font-size:13px;
+  color:#aeb7c2;
+}
+.area-field input{
+  margin-top:4px;
+}
+.area-geo-btn{
+  padding:10px 12px;
+  border:0;
+  border-radius:10px;
+  background:#2a3440;
+  color:#d5dce5;
+  font-size:12px;
+  font-weight:800;
+  cursor:pointer;
+}
+.area-save-btn{
+  width:100%;
+  padding:14px 16px;
+  border:0;
+  border-radius:14px;
+  background:#f7c948;
+  color:#111;
+  font-size:16px;
+  font-weight:900;
+  cursor:pointer;
+  margin-top:4px;
+}
+.area-settings-status{
+  font-size:13px;
+  color:#aaa;
+  margin:10px 0 0;
+}
+@media(max-width:560px){
+  .area-card{padding:12px}
+  .area-save-btn{font-size:15px}
+}
